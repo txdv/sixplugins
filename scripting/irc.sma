@@ -214,6 +214,15 @@ public irc_connect()
 	format(temp,1024,"NICK %s^r^nUSER %s 0 * :HLDS Bot^r^n",nick,username)
 	additem(temp)
 	pings=2
+	
+	
+	server_print("[IRC] Connected sucessfully");
+	irc_joinchannel()
+	set_cvar_num("irc_clientport",irc_socket)
+	irc_identify()      
+	startup_message(0,"")
+
+				
 	return irc_socket
 }
 public checkping() 
@@ -571,9 +580,9 @@ public irc_saytext(id)
 			new team = get_user_team(id)
 			switch(team)
 			{
-				case 1: len += format(finalmessage[len],300-len,"4%s",name) 
-					case 2: len += format(finalmessage[len],300-len,"12%s",name) 
-					default: len += format(finalmessage[len],300-len,"0%s",name) 
+				case 1: len += format(finalmessage[len],300-len,"4 %s",name) 
+					case 2: len += format(finalmessage[len],300-len,"12 %s",name) 
+					default: len += format(finalmessage[len],300-len,"0 %s",name) 
 			}
 		}
 		else
@@ -634,9 +643,9 @@ public irc_sayteamtext(id)
 			team = get_user_team(id)
 			switch(team)
 			{
-				case 1: len += format(finalmessage[len],300-len,"4%s",name) 
-					case 2: len += format(finalmessage[len],300-len,"12%s",name) 
-					default: len += format(finalmessage[len],300-len,"0%s",name) 
+				case 1: len += format(finalmessage[len],300-len,"4 %s",name) 
+					case 2: len += format(finalmessage[len],300-len,"12 %s",name) 
+					default: len += format(finalmessage[len],300-len,"0 %s",name) 
 			}
 		}
 		else
