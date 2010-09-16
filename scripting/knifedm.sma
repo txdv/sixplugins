@@ -3,7 +3,7 @@
 #include <fakemeta>
 #include <fun>
 
-new g_enabled = 1;
+new g_enabled = 0;
 
 new gcv_knifedm,
     gcv_knifedm_delay;
@@ -23,6 +23,7 @@ public start()
 {
 	if (get_pcvar_num(gcv_knifedm))
 	{
+		g_enabled = 1;
 		set_task(get_pcvar_float(gcv_knifedm_delay), "start_game")
 	}
 }
