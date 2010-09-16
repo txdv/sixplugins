@@ -16,11 +16,11 @@
 new g_invalid_chars[] =  { '/', '\', ':', '*', '?', '<', '>', '|', ' ' };
 
 new gcv_demo,
-		gcv_demo_start_time,
-		gcv_demo_msg,
-		gcv_demo_msg_prefix,
-		gcv_demo_prefix,
-		gcv_demo_log;
+    gcv_demo_start_time,
+    gcv_demo_msg,
+    gcv_demo_msg_prefix,
+    gcv_demo_prefix,
+    gcv_demo_log;
 
 public plugin_init()
 {
@@ -28,12 +28,12 @@ public plugin_init()
 
 	// Minimum start time is 15 and is automatically set to if lesser.
 	// I recommend to use the default settings
-	gcv_demo_start_time			=	register_cvar("amx_demo_start_time",	"15");
-	gcv_demo								= register_cvar("amx_demo",							"1");
-	gcv_demo_msg						= register_cvar("amx_demo_msg",					"1");
-	gcv_demo_msg_prefix			= register_cvar("amx_demo_msg_prefix",	"AMXX");
-	gcv_demo_prefix					= register_cvar("amx_demo_prefix",			"AMXX");
-	gcv_demo_log						= register_cvar("amx_demo_log",					"1");
+	gcv_demo_start_time     =	register_cvar("amx_demo_start_time",  "15");
+	gcv_demo                = register_cvar("amx_demo",             "1");
+	gcv_demo_msg            = register_cvar("amx_demo_msg",         "1");
+	gcv_demo_msg_prefix     = register_cvar("amx_demo_msg_prefix",  "AMXX");
+	gcv_demo_prefix         = register_cvar("amx_demo_prefix",      "AMXX");
+	gcv_demo_log            = register_cvar("amx_demo_log",         "1");
 
 	// load languages
 	register_dictionary("demorecorder.txt");
@@ -56,13 +56,13 @@ public Record(id)
 		return;
 
 	new sz_demoname    [256],
-		  sz_demo_prefix [64],
+	    sz_demo_prefix [64],
 	    sz_hostname    [64],
-			sz_nickname    [32],
-			sz_authid      [32],
-			sz_mapname     [64],
-			sz_time				 [9],
-			sz_date        [11];
+	    sz_nickname    [32],
+	    sz_authid      [32],
+	    sz_mapname     [64],
+	    sz_time        [9],
+	    sz_date        [11];
 
 	get_pcvar_string2(gcv_demo_prefix, sz_demo_prefix);
 	get_cvar_string2("hostname", sz_hostname);
@@ -74,13 +74,13 @@ public Record(id)
 
 
 	formatex(sz_demoname, sizeof(sz_demoname) -1, "%s_%s_%s_%s_%s_%s_%s",
-					 sz_demo_prefix,
-					 sz_hostname,
-					 sz_nickname,
-					 sz_authid,
-					 sz_mapname,
-					 sz_time,
-					 sz_date
+	         sz_demo_prefix,
+	         sz_hostname,
+	         sz_nickname,
+	         sz_authid,
+	         sz_mapname,
+	         sz_time,
+	         sz_date
 					 );
 
 	// Replacing signs.
@@ -98,7 +98,7 @@ public Record(id)
 
 		client_cmd(id, "stop; record ^"%s^"", sz_demoname);
 		client_print(id, print_chat, "[%s] %L ^"%s.dem^"", sz_demo_msg_prefix, LANG_PLAYER, "RECORDINGIN", sz_demoname);
-		client_print(id, print_chat, "[%s] %L"					 , sz_demo_msg_prefix, LANG_PLAYER, "RECORDINGAT", sz_time);
+		client_print(id, print_chat, "[%s] %L"           , sz_demo_msg_prefix, LANG_PLAYER, "RECORDINGAT", sz_time);
 	}
 
 	if (get_pcvar_num(gcv_demo_log)) {
