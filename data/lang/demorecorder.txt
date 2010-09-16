@@ -15,8 +15,8 @@ RECORDINGIN = Vi spelar nu in i din cstrike mapp
 RECORDINGAT = Demo inspelning har b'o'rjat f'o'r %s
 
 [de]
-RECORDINGIN = Wir sind jetzt beim Aufnehmen bei deinem cstrike ordner
-RECORDINGAT = Demoaufnahme hat begonnen bei %s 
+RECORDINGIN = Wir nehmen gerade eine Demo von dir auf, die Datei befindet sich in deinem cstrike ordner: %s.dem
+RECORDINGAT = Die Demo aufnahme hat um %s uhr begonnen.
 
 [es]
 RECORDINGIN = Estamos grabando en tu carpeta cstrike
