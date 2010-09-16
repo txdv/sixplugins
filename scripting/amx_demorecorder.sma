@@ -9,6 +9,7 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <amxmisc>
 
 #define get_pcvar_string2(%1,%2) get_pcvar_string(%1, %2, sizeof(%2) -1)
 #define get_cvar_string2(%1,%2) get_cvar_string(%1, %2, sizeof(%2) -1)
@@ -20,7 +21,8 @@ new gcv_demo,
     gcv_demo_msg,
     gcv_demo_msg_prefix,
     gcv_demo_prefix,
-    gcv_demo_log;
+    gcv_demo_log,
+		gcv_demo_admin_immunity;
 
 public plugin_init()
 {
@@ -34,6 +36,7 @@ public plugin_init()
 	gcv_demo_msg_prefix     = register_cvar("amx_demo_msg_prefix",        "AMXX");
 	gcv_demo_prefix         = register_cvar("amx_demo_prefix",            "AMXX");
 	gcv_demo_log            = register_cvar("amx_demo_log",               "1");
+	gcv_demo_admin_immunity = register_cvar("amx_demo_admin_immunity",    "0");
 
 	// load languages
 	register_dictionary("demorecorder.txt");
@@ -53,6 +56,9 @@ public client_putinserver(id)
 public Record(id)
 {
 	if(!is_user_connected(id) || !get_pcvar_num(gcv_demo))
+		return;
+
+	if (get_pcvar_num(gcv_demo_admin_immunity) && is_user_admin(id))
 		return;
 
 	new sz_demoname    [256],
