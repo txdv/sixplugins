@@ -14,7 +14,7 @@
 #define get_pcvar_string2(%1,%2) get_pcvar_string(%1, %2, sizeof(%2) -1)
 #define get_cvar_string2(%1,%2) get_cvar_string(%1, %2, sizeof(%2) -1)
 
-new g_invalid_chars[] =  { '/', '\', ':', '*', '?', '<', '>', '|', ' ' };
+new g_invalid_chars[] =  { "/", "\", ":", "*", "?", "<", ">", "|", " " };
 
 new gcv_demo,
     gcv_demo_start_time,
@@ -92,7 +92,7 @@ public Record(id)
 	new i = 0;
 	while (i < sizeof(g_invalid_chars))
 	{
-		replace_all(sz_demoname, 127, g_invalid_chars[i], "-");
+		replace_all(sz_demoname, sizeof(sz_demoname) -1, g_invalid_chars[i], "-");
 		i++;
 	}
 
