@@ -6,36 +6,38 @@
 /*					                            */
 /****************************************/
 
-#include <amxmodx>
 #pragma semicolon 1
+
+#include <amxmodx>
+
+#define get_pcvar_string2(%1,%2) get_pcvar_string(%1, %2, sizeof(%2) -1)
+#define get_cvar_string2(%1,%2) get_cvar_string(%1, %2, sizeof(%2) -1)
 
 new g_invalid_chars[] =  { '/', '\', ':', '*', '?', '<', '>', '|', ' ' };
 
 new gcv_demo,
-	  gcv_demo_mode,
-		gcv_demo_steamid,
 		gcv_demo_start_time,
-		gcv_demo_name,
+		gcv_demo_msg,
+		gcv_demo_msg_prefix,
 		gcv_demo_prefix;
 
 public plugin_init()
 {
-	register_plugin("Auto Demo Recorder", "1.5", "IzI");
+	register_plugin("Auto Demo Recorder", "1.5.1", "IzI");
 
-	gcv_demo						= register_cvar("amx_demo",					"1");
-	gcv_demo_mode				= register_cvar("amx_demo_mode",		"0");
-	gcv_demo_steamid		= register_cvar("amx_demo_steamid",	"0");
 	// Minimum start time is 15 and is automatically set to if lesser.
 	// I recommend to use the default settings
-	gcv_demo_start_time	=	register_cvar("amx_demo_start_time",	"15");
-	gcv_demo_name				= register_cvar("amx_demo_name",		"Autorecorded demo");
-	gcv_demo_prefix			= register_cvar("amx_demo_prefix",	"AMXX");
+	gcv_demo_start_time			=	register_cvar("amx_demo_start_time",	"15");
+	gcv_demo								= register_cvar("amx_demo",							"1");
+	gcv_demo_msg						= register_cvar("amx_demo_msg",					"1");
+	gcv_demo_msg_prefix			= register_cvar("amx_demo_msg_prefix",	"AMXX");
+	gcv_demo_prefix					= register_cvar("amx_demo_prefix",			"AMXX");
 
 	// load languages
 	register_dictionary("demorecorder.txt");
 }
 
-public client_putinserver( id )
+public client_putinserver(id)
 {
 	if (get_pcvar_num(gcv_demo)) {
 		new Float:delay = get_pcvar_float(gcv_demo_start_time);
@@ -48,38 +50,52 @@ public client_putinserver( id )
 
 public Record(id)
 {
-	if(!is_user_connected(id) || get_pcvar_num(gcv_demo) != 1)
+	if(!is_user_connected(id) || !get_pcvar_num(gcv_demo))
 		return;
 
-	// Getting time, client SteamID, server's name, server's ip with port.
-	new szSName[128], szINamePrefix[64], szTimedata[9];
-	new iUseIN = get_pcvar_num(gcv_demo_steamid);
-	new iDMod = get_pcvar_num(gcv_demo_mode);
-	get_pcvar_string( gcv_demo_prefix, szINamePrefix, 63 );
-	get_time ( "%H:%M:%S", szTimedata, 8 );
+	new sz_demoname    [256],
+		  sz_demo_prefix [64],
+	    sz_hostname    [64],
+			sz_nickname    [64],
+			sz_steamid     [64],
+			sz_mapname     [64],
+			sz_time				 [9],
+			sz_date        [11];
 
-	switch( iDMod ) {
-		case 0: get_pcvar_string( gcv_demo_name, szSName, 127 );
-		case 1: get_user_ip( 0, szSName, 127, 0 );
-		case 2: get_user_name( 0, szSName, 127 );
-	}
+	get_pcvar_string2(gcv_demo_prefix, sz_demo_prefix);
+	get_cvar_string2("hostname", sz_hostname);
+	get_user_name(id, sz_nickname, sizeof(sz_nickname) -1);
+	get_user_authid(id, sz_steamid, sizeof(sz_steamid) -1);
+	get_mapname(sz_mapname, sizeof(sz_mapname) -1);
+	get_time("%H:%M:%S", sz_time, sizeof(sz_time) -1);
+	get_time("%d-%m-%Y", sz_date, sizeof(sz_date) -1);
 
-	if( iUseIN ) {
-		new szCID[32];
-		get_user_authid( id, szCID, 31 );
-		format( szSName, 127, "[%s]%s", szCID, szSName );
-	}
+
+	formatex(sz_demoname, sizeof(sz_demoname) -1, "%s_%s_%s_%s_%s_%s_%s",
+					 sz_demo_prefix,
+					 sz_hostname,
+					 sz_nickname,
+					 sz_steamid,
+					 sz_mapname,
+					 sz_time,
+					 sz_date
+					 );
 
 	// Replacing signs.
 	new i = 0;
 	while (i < sizeof(g_invalid_chars))
 	{
-		replace_all(szSName, 127, g_invalid_chars[i], "-");
+		replace_all(sz_demoname, 127, g_invalid_chars[i], "-");
 		i++;
 	}
 
 	// Displaying messages.
-	client_cmd( id, "stop; record ^"%s^"", szSName );
-	client_print( id, print_chat, "[%s] %L ^"%s.dem^"", szINamePrefix, LANG_PLAYER, "RECORDINGIN", szSName );
-	client_print( id, print_chat, "[%s] %L", szINamePrefix, LANG_PLAYER, "RECORDINGAT", szTimedata );
+	if (!get_pcvar_num(gcv_demo_msg)) {
+		new sz_demo_msg_prefix[64];
+		get_pcvar_string2(gcv_demo_msg_prefix, sz_demo_msg_prefix);
+
+		client_cmd(id, "stop; record ^"%s^"", sz_demoname);
+		client_print(id, print_chat, "[%s] %L ^"%s.dem^"", sz_demo_msg_prefix, LANG_PLAYER, "RECORDINGIN", sz_demoname);
+		client_print(id, print_chat, "[%s] %L"					 , sz_demo_msg_prefix, LANG_PLAYER, "RECORDINGAT", sz_time);
+	}
 }
