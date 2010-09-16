@@ -1,9 +1,9 @@
 /****************************************/
 /*                                      */
-/*	Auto Demo Recorder                  */
-/*	by IzI                              */
-/*  feat ToXedVirus (2010)              */
-/*					                            */
+/*      Auto Demo Recorder              */
+/*      by IzI                          */
+/*      feat ToXedVirus (2010)          */
+/*                                      */
 /****************************************/
 
 #pragma semicolon 1
@@ -29,11 +29,11 @@ public plugin_init()
 	// Minimum start time is 15 and is automatically set to if lesser.
 	// I recommend to use the default settings
 	gcv_demo_start_time     =	register_cvar("amx_demo_start_time",  "15");
-	gcv_demo                = register_cvar("amx_demo",             "1");
-	gcv_demo_msg            = register_cvar("amx_demo_msg",         "1");
-	gcv_demo_msg_prefix     = register_cvar("amx_demo_msg_prefix",  "AMXX");
-	gcv_demo_prefix         = register_cvar("amx_demo_prefix",      "AMXX");
-	gcv_demo_log            = register_cvar("amx_demo_log",         "1");
+	gcv_demo                = register_cvar("amx_demo",                   "1");
+	gcv_demo_msg            = register_cvar("amx_demo_msg",               "1");
+	gcv_demo_msg_prefix     = register_cvar("amx_demo_msg_prefix",        "AMXX");
+	gcv_demo_prefix         = register_cvar("amx_demo_prefix",            "AMXX");
+	gcv_demo_log            = register_cvar("amx_demo_log",               "1");
 
 	// load languages
 	register_dictionary("demorecorder.txt");
@@ -80,8 +80,7 @@ public Record(id)
 	         sz_authid,
 	         sz_mapname,
 	         sz_time,
-	         sz_date
-					 );
+	         sz_date);
 
 	// Replacing signs.
 	new i = 0;
