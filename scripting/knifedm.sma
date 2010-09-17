@@ -2,6 +2,7 @@
 #include <hamsandwich>
 #include <fakemeta>
 #include <fun>
+#include <cstrike>
 
 new g_enabled = 0;
 
@@ -39,5 +40,6 @@ public fwHamPlayerSpawnPost(id) {
 		strip_user_weapons(id);
 		set_pdata_int(id, 116, 0);
 		give_item(id, "weapon_knife");
+		cs_set_user_money(id, 0);
 	}
 }
