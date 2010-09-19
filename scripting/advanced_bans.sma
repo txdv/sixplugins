@@ -206,7 +206,7 @@
 
 
 // if you want to use SQL for your server, then uncomment the line below
-//#define USING_SQL
+// #define USING_SQL
 
 
 // ===============================================
@@ -314,6 +314,7 @@ new ab_website;
 new ab_immunity;
 new ab_bandelay;
 new ab_unbancheck;
+new ab_bantype;
 
 new amx_show_activity;
 
@@ -342,6 +343,7 @@ public plugin_init()
 	
 	register_concmd("amx_ban", "CmdBan", ADMIN_BAN, "<nick, #userid, authid> <time in minutes> <reason>");
 	register_concmd("amx_banip", "CmdBanIp", ADMIN_BAN, "<nick, #userid, authid> <time in minutes> <reason>");
+	register_concmd("amx_banauthid", "CmdBanAuthId", ADMIN_BAN, "<nick, #userid, authid> <time in minutes> <reason>");
 	register_concmd("amx_addban", "CmdAddBan", ADMIN_BAN, "<name> <authid or ip> <time in minutes> <reason>");
 	register_concmd("amx_unban", "CmdUnban", ADMIN_BAN, "<authid or ip>");
 	register_concmd("amx_banlist", "CmdBanList", ADMIN_BAN, "[start] -- shows everyone who is banned");
@@ -351,6 +353,7 @@ public plugin_init()
 	ab_immunity = register_cvar("ab_immunity", "1");
 	ab_bandelay = register_cvar("ab_bandelay", "1.0");
 	ab_unbancheck = register_cvar("ab_unbancheck", "5.0");
+	ab_bantype = register_cvar("ab_bantype", "1");
 	
 	amx_show_activity = register_cvar("amx_show_activity", "2");
 	
@@ -498,29 +501,34 @@ public client_authorized(client)
 	#endif
 }
 
-public CmdBan(client, level, cid)
+public CommandBan(client, level, cid, type)
 {
-	if( !cmd_access(client, level, cid, 4) ) return PLUGIN_HANDLED;
-	
+	// type == 1 == STEAM_ID
+	// type == 0 == IP
+
 	static arg[128];
 	read_argv(1, arg, sizeof(arg) - 1);
-	
+
 	new target = cmd_target(client, arg, GetTargetFlags(client));
 	if( !target ) return PLUGIN_HANDLED;
-	
-	static target_authid[35];
-	get_user_authid(target, target_authid, sizeof(target_authid) - 1);
-	
-	if( !IsValidAuthid(target_authid) )
+
+	static target_id[35];
+	if (type)
 	{
-		console_print(client, "[AdvancedBans] %L", client, "AB_NOT_AUTHORIZED");
-		return PLUGIN_HANDLED;
+		get_user_authid(target, target_id, sizeof(target_id) - 1);
+		if( !IsValidAuthid(target_id) )
+		{
+			console_print(client, "[AdvancedBans] %L", client, "AB_NOT_AUTHORIZED");
+			return PLUGIN_HANDLED;
+		}
 	}
-	
+	else
+		get_user_ip(target, target_id, sizeof(target_id) - 1, 1);
+
 	#if MAX_BANS <= 0
-	if( TrieKeyExists(g_trie, target_authid) )
+	if( TrieKeyExists(g_trie, target_id) )
 	{
-		console_print(client, "[AdvancedBans] %L", client, "AB_ALREADY_BANNED_STEAMID");
+		console_print(client, "[AdvancedBans] %L", client, (type?"AB_ALREADY_BANNED_STEAMID":"AB_ALREADY_BANNED_IP"));
 		return PLUGIN_HANDLED;
 	}
 	#else
@@ -528,12 +536,12 @@ public CmdBan(client, level, cid)
 	{
 		if( !strcmp(target_authid, g_steamids[i], 1) )
 		{
-			console_print(client, "[AdvancedBans] %L", client, "AB_ALREADY_BANNED_STEAMID");
+			console_print(client, "[AdvancedBans] %L", client, (type?"AB_ALREADY_BANNED_STEAMID":"AB_ALREADY_BANNED_IP"));
 			return PLUGIN_HANDLED;
 		}
 	}
 	#endif
-	
+
 	read_argv(2, arg, sizeof(arg) - 1);
 	
 	new length = str_to_num(arg);
@@ -546,6 +554,7 @@ public CmdBan(client, level, cid)
 	}
 	
 	static unban_time[64];
+
 	if( length == 0 )
 	{
 		formatex(unban_time, sizeof(unban_time) - 1, "%L", client, "AB_PERMANENT_BAN");
@@ -564,10 +573,10 @@ public CmdBan(client, level, cid)
 	static admin_authid[35];
 	get_user_authid(client, admin_authid, sizeof(admin_authid) - 1);
 	
-	AddBan(target_name, target_authid, arg, length, unban_time, admin_name, admin_authid);
+	AddBan(target_name, target_id, arg, length, unban_time, admin_name, admin_authid);
 	
-	PrintBanInformation(target, target_name, target_authid, arg, length, unban_time, admin_name, admin_authid, true, true);
-	PrintBanInformation(client, target_name, target_authid, arg, length, unban_time, admin_name, admin_authid, false, false);
+	PrintBanInformation(target, target_name, target_id, arg, length, unban_time, admin_name, admin_authid, true, true);
+	PrintBanInformation(client, target_name, target_id, arg, length, unban_time, admin_name, admin_authid, false, false);
 	
 	set_task(get_pcvar_float(ab_bandelay), "TaskDisconnectPlayer", target);
 	
@@ -575,86 +584,27 @@ public CmdBan(client, level, cid)
 	
 	PrintActivity(admin_name, "^x04[AdvancedBans] $name^x01 :^x03  banned %s. Reason: %s. Ban Length: %s", target_name, arg, unban_time);
 	
-	Log("%s <%s> banned %s <%s> || Reason: ^"%s^" || Ban Length: %s", admin_name, admin_authid, target_name, target_authid, arg, unban_time);
-	
+	Log("%s <%s> banned %s <%s> || Reason: ^"%s^" || Ban Length: %s", admin_name, admin_authid, target_name, target_id, arg, unban_time);
+
 	return PLUGIN_HANDLED;
+}
+
+public CmdBan(client, level, cid)
+{
+	if( !cmd_access(client, level, cid, 4) ) return PLUGIN_HANDLED;
+	return CommandBan(client, level, cid, get_pcvar_num(ab_bantype));
 }
 
 public CmdBanIp(client, level, cid)
 {
 	if( !cmd_access(client, level, cid, 4) ) return PLUGIN_HANDLED;
-	
-	static arg[128];
-	read_argv(1, arg, sizeof(arg) - 1);
-	
-	new target = cmd_target(client, arg, GetTargetFlags(client));
-	if( !target ) return PLUGIN_HANDLED;
-	
-	static target_ip[35];
-	get_user_ip(target, target_ip, sizeof(target_ip) - 1, 1);
-	
-	#if MAX_BANS <= 0
-	if( TrieKeyExists(g_trie, target_ip) )
-	{
-		console_print(client, "[AdvancedBans] %L", client, "AB_ALREADY_BANNED_IP");
-		return PLUGIN_HANDLED;
-	}
-	#else
-	for( new i = 0; i < g_total_bans; i++ )
-	{
-		if( !strcmp(target_ip, g_steamids[i], 1) )
-		{
-			console_print(client, "[AdvancedBans] %L", client, "AB_ALREADY_BANNED_IP");
-			return PLUGIN_HANDLED;
-		}
-	}
-	#endif
-	
-	read_argv(2, arg, sizeof(arg) - 1);
-	
-	new length = str_to_num(arg);
-	new maxlength = GetMaxBanTime(client);
-	
-	if( maxlength && (!length || length > maxlength) )
-	{
-		console_print(client, "[AdvancedBans] %L", client, "AB_MAX_BAN_TIME", maxlength);
-		return PLUGIN_HANDLED;
-	}
-	
-	static unban_time[32];
-	
-	if( length == 0 )
-	{
-		formatex(unban_time, sizeof(unban_time) - 1, "%L", client, "AB_PERMANENT_BAN");
-	}
-	else
-	{
-		GenerateUnbanTime(length, unban_time, sizeof(unban_time) - 1);
-	}
-	
-	read_argv(3, arg, sizeof(arg) - 1);
-	
-	static admin_name[64], target_name[32];
-	get_user_name(client, admin_name, sizeof(admin_name) - 1);
-	get_user_name(target, target_name, sizeof(target_name) - 1);
-	
-	static admin_authid[35];
-	get_user_authid(client, admin_authid, sizeof(admin_authid) - 1);
-	
-	AddBan(target_name, target_ip, arg, length, unban_time, admin_name, admin_authid);
-	
-	PrintBanInformation(target, target_name, target_ip, arg, length, unban_time, admin_name, admin_authid, true, true);
-	PrintBanInformation(client, target_name, target_ip, arg, length, unban_time, admin_name, admin_authid, false, false);
-	
-	set_task(get_pcvar_float(ab_bandelay), "TaskDisconnectPlayer", target);
-	
-	GetBanTime(length, unban_time, sizeof(unban_time) - 1);
-	
-	PrintActivity(admin_name, "^x04[AdvancedBans] $name^x01 :^x03  banned %s. Reason: %s. Ban Length: %s", target_name, arg, unban_time);
-	
-	Log("%s <%s> banned %s <%s> || Reason: ^"%s^" || Ban Length: %s", admin_name, admin_authid, target_name, target_ip, arg, unban_time);
-	
-	return PLUGIN_HANDLED;
+	return CommandBan(client, level, cid, 0);
+}
+
+public CmdBanAuthId(client, level, cid)
+{
+	if( !cmd_access(client, level, cid, 4) ) return PLUGIN_HANDLED;
+	return CommandBan(client, level, cid, 1);
 }
 
 public CmdAddBan(client, level, cid)
