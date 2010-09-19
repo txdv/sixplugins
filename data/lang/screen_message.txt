@@ -1,0 +1,306 @@
+[en]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yused command SnapShot on you !
+SS_MSG2 = !y[AMXX] Date: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Player Name: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Country: !g%s
+SS_MSG4 = !y[AMXX] For unban visit !t%s !y!
+SS_MSG_HUD = Date: %s | Server: %s !^nPlayer Name: %s IP: %s ^nSteamID: %s | Country: %s ^nFor unban visit %s !
+SS_CASE2 = !yADMIN !g%s !yused command SnapShot on !g%s
+SS_CASE1 = !yADMIN used command SnapShot on !g%s
+SS_CONSOLE = You have just taken some Snapshots of %s !
+REASON_HUDASK = ADMIN: %s^nPlease type a ban reason !
+SS_MENU = Snapshot Menu
+SSBAN_MENU = Snapshot Ban Menu
+NO_REASON_MENU = No Reason Submitted
+
+[ro]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yti-a facut poze !
+SS_MSG2 = !y[AMXX] Data: !g%s !y| Server-ul: !t%s !y!
+SS_MSG3 = !y[AMXX] Nume Jucator: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Tara: !g%s
+SS_MSG4 = !y[AMXX] Pentru a fi debanat viziteaza !t%s !y!
+SS_MSG_HUD = Data: %s | Server: %s !^nNume Jucator: %s IP: %s ^nSteamID: %s | Tara: %s ^nPentru debanare viziteaza %s !
+SS_CASE2 = !yADMIN !g%s !yi-a facut poze lui !g%s !y!
+SS_CASE1 = !yUn Admin i-a facut poze lui !g%s !y!
+SS_CONSOLE = Tocmai i-ai facut poze lui %s !
+REASON_HUDASK = ADMIN: %s^nTe rog tasteaza motivul banari !
+SS_MENU = Meniu Poze
+SSBAN_MENU = Meniu Poze si Ban
+NO_REASON_MENU = Motivul nu a fost mentionat
+
+[es]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yuso el comando SnapShot en ti !
+SS_MSG2 = !y[AMXX] Fecha: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Nombre del jugador: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Pais: !g%s
+SS_MSG4 = !y[AMXX] Para desbanear visita !t%s !y!
+SS_MSG_HUD = Fecha: %s | Server: %s !^nNombre del jugador: %s IP: %s ^nSteamID: %s | Pais: %s ^nPara desbanear visita %s !
+SS_CASE2 = !yADMIN !g%s !yuso el comando SnapShot en !g%s
+SS_CASE1 = !yADMIN uso el comando SnapShot en !g%s
+SS_CONSOLE = Le has tomado algunas fotos a %s !
+REASON_HUDASK = ADMIN: %s^nPor favor escribe el motivo del ban !
+SS_MENU = Menu de fotos
+SSBAN_MENU = Ban menu de fotos
+NO_REASON_MENU = Ninguna Razon Establecida
+
+[de]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !ybenutzte den Befehl SnapShot bei dir !
+SS_MSG2 = !y[AMXX] Datum: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Spieler Name: !g%s !y| IP: !g%s !y| Land: !g%s
+SS_MSG4 = !y[AMXX] fuer Entbannung besuch !t%s !y!
+SS_MSG_HUD = Datum: %s | Server: %s !^nSpieler Name: %s IP: %s ^nSteamID: %s | Land: %s ^nFuer Entbannung besuch %s !
+SS_CASE2 = !yADMIN !g%s !ybenutzte den Befehl SnapShot bei !g%s
+SS_CASE1 = !yADMIN benutzte den Befehl SnapShot bei !g%s
+SS_CONSOLE = Sie haben gerade einige Schnappschuesse aufgenommen zu %s !
+REASON_HUDASK = ADMIN: %s^nGib bitte einen Banngrund an !
+SS_MENU = Schnappschuss-Menue
+SSBAN_MENU = Schnappschuss-Bannmenue
+NO_REASON_MENU = Keine Gruende gefunden
+
+[ru]
+SS_MSG1 = !y[AMXX] Админ: !g%s !yНа вас Сделал Скриншот!
+SS_MSG2 = !y[AMXX] Дата: !g%s !y| Сервер: !t%s !y!
+SS_MSG3 = !y[AMXX] Имя Игрока: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Страна: !g%s
+SS_MSG4 = !y[AMXX] Для разбана посетите!t%s !y!
+SS_MSG_HUD = Дата: %s | Сервер: %s !^nИмя игока: %s IP: %s ^nSteamID: %s | Страна: %s ^nДля разбана посетите %s !
+SS_CASE2 = !yАдмин !g%s !yНа вас Сделал Скриншот! !g%s
+SS_CASE1 = !yадмин На вас Сделал Скриншот! !g%s
+SS_CONSOLE = Вы только что сделали моментальные Снимки %s !
+REASON_HUDASK = админ: %s^nНапишите причину Бана !
+SS_MENU = Меню моментального Снимка
+SSBAN_MENU = Меню бана
+NO_REASON_MENU = Нет Предоставленной Причины
+
+[bg]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yizpolzwa komandata da ti snima ekrana !
+SS_MSG2 = !y[AMXX] Data: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Imeto na igra4a: !g%s !y| IP Adresa: !g%s ! ySteamID: !g%s !y| Durjava: !g%s
+SS_MSG4 = !y[AMXX] Za mahane na bana posetete !t%s !y!
+SS_MSG_HUD = Data: %s | Server: %s !^nImeto na igra4a: %s IP: %s ^nSteamID: %s | Durjava: %s ^nZa mahane na bana posetete %s !
+SS_CASE2 = !yADMIN !g%s !yizpolzwa komandata za snimane na ekrana vurhy !g%s
+SS_CASE1 = !yADMIN izpolzwa komandata za snimane na ekrana vurhy !g%s
+SS_CONSOLE = Vie wednaga shte vzemete snimkata na %s !
+REASON_HUDASK = ADMIN: %s^nMolq napishete prichina za ban!
+SS_MENU = Menu screenshotow
+SSBAN_MENU = Ban Menu screenshotow
+NO_REASON_MENU = Nqma predodstavena prichina
+
+[pl]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yzrobil Ci screena!
+SS_MSG2 = !y[AMXX] Data: !g%s !y| Serwer: !t%s !y!
+SS_MSG3 = !y[AMXX] Nick: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Kraj: !g%s
+SS_MSG4 = !y[AMXX] Jesli uwazasz, ze to pomylka wejdz na: !t%s !y!
+SS_MSG_HUD = Date: %s | Serwer: %s !^nNick: %s IP: %s ^nSteamID: %s | Kraj: %s ^nJesli uwazasz, ze to pomylka wejdz na: %s !
+SS_CASE2 = !yADMIN !g%s !yzrobil screena graczowi !g%s
+SS_CASE1 = !yADMIN zrobil screena graczowi !g%s
+SS_CONSOLE = Zrobiono Ci screena %s !
+REASON_HUDASK = ADMIN: %s^nProsze podac powod bana!
+SS_MENU = Menu screenshota
+SSBAN_MENU = Menu zbanowanych screenshotow
+NO_REASON_MENU = Nie podano powodu
+
+[sv]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yanv'a'nde kommand SnapShot pa dig !
+SS_MSG2 = !y[AMXX] Datum: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Spelarens Namn: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Land: !g%s
+SS_MSG4 = !y[AMXX] F'o'r unban bes'o'k !t%s !y!
+SS_MSG_HUD = Datum: %s | Server: %s !^nSpelarens Namn: %s IP: %s ^nSteamID: %s | Land: %s ^nF'o'r unban bes'o'k %s !
+SS_CASE2 = !yADMIN !g%s !yanv'a'nde kommand SnapShot pa !g%s
+SS_CASE1 = !yADMIN anv'a'nde kommand SnapShot pa !g%s
+SS_CONSOLE = Du har just tagit nagra Snapshots av %s !
+REASON_HUDASK = ADMIN: %s^nSn'a'lla skriv en bannorsak !
+SS_MENU = Snapshot Meny
+SSBAN_MENU = Snapshot Ban Meny
+NO_REASON_MENU = Ingen anledning L'a'mnats in
+
+[nl]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !ygebruikte het SnapShot commando op jouw!
+SS_MSG2 = !y[AMXX] Datum: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Naam van de Speler: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Land: !g%s
+SS_MSG4 = !y[AMXX] Voor ontbanning bezoek !t%s !y!
+SS_MSG_HUD = Datum: %s | Server: %s !^nNaam van de speler: %s IP: %s ^nSteamID: %s | Land: %s ^nFVoor ontbanning bezoek %s !
+SS_CASE2 = !yADMIN !g%s !ygebruikte het commando SnapShot op !g%s
+SS_CASE1 = !yADMIN gebruikte het commando SnapShot op !g%s
+SS_CONSOLE = Je hebt juist Snapshots genomen van %s !
+REASON_HUDASK = ADMIN: %s^nGelieve een verban reden in te voegen! 
+SS_MENU = Momentopname Menu
+SSBAN_MENU = Momentopname Ban Menu
+NO_REASON_MENU = Geen reden ingevoegd
+
+[pr]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yDastoure Snapshot ra rouye shoma esteafadeh kard !
+SS_MSG2 = !y[AMXX] Tarikh: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Esme bazigar: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Keshvar: !g%s
+SS_MSG4 = !y[AMXX] Baraye unban be site !t%s !y beravid!
+SS_MSG_HUD = Tarikh: %s | Server: %s !^nEsme bazigar: %s IP: %s ^nSteamID: %s | Keshvar: %s ^nbararye unban be in site beravid %s !
+SS_CASE2 = !yADMIN !g%s !yDastoure Snapshot ra rouye !g%s estefadeh kard.
+SS_CASE1 = !yADMIN Dastoure Snapshot ra rouye !g%s ejra kard
+SS_CONSOLE = Show faghat chand ax az %s gereftid!
+REASON_HUDASK = ADMIN: %s^nLotfan yek dalil biaravid !
+SS_MENU = Snapshot Menu
+SSBAN_MENU = Snapshot Ban Menu
+NO_REASON_MENU = Hich dalili sader nashod. 
+
+[lt]
+SS_MSG1 = !y[AMXX] ADMINAS: !g%s !ypanaudojo SnapShot komanda ant taves!
+SS_MSG2 = !y[AMXX] Date: !g%s !y| Serveris: !t%s !y!
+SS_MSG3 = !y[AMXX] Zaidejo vardas: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Salis: !g%s
+SS_MSG4 = !y[AMXX] Del atbaninimo apsilankyk !t%s !y!
+SS_MSG_HUD = Data: %s | Serveris: %s !^nZaidejo vardas: %s IP: %s ^nSteamID: %s | Salis: %s ^nDel atbaninimo apsilankyk %s !
+SS_CASE2 = !yADMINAS !g%s !ypanaudojo SnapShot komanda ant !g%s
+SS_CASE1 = !yADMINAS panaudojo SnapShot komanda ant !g%s
+SS_CONSOLE = Tau katik buvo padaryti keli SnapShotai i %s !
+REASON_HUDASK = ADMINAS: %s^nPrasome ivesti bano priezasti !
+SS_MENU = Snapshot meniu
+SSBAN_MENU = Snapshot banu meniu
+NO_REASON_MENU = Priezastis nepateikta
+
+[bp]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !ytirou uma foto doque voce ve !
+SS_MSG2 = !y[AMXX] Data: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Nome do Jogador: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Pais: !g%s
+SS_MSG4 = !y[AMXX] Para ser desbanido visite !t%s !y!
+SS_MSG_HUD = Data: %s | Servidor: %s !^nNome do jogador: %s IP: %s ^nSteamID: %s | Pais: %s ^nPara unban visite %s !
+SS_CASE2 = !yADMIN !g%s !ytirou uma foto doque o jogador !g%s esta vendo.
+SS_CASE1 = !yADMIN tirou uma foto doque o jogador !g%s esta vendo.
+SS_CONSOLE = Voce tirou algumas Fotos para %s !
+REASON_HUDASK = ADMIN: %s^nPor favor insira o motivo de banimento.
+SS_MENU = Menu de Menu de Tirar Fotos
+SSBAN_MENU = Menu de Banir e Tirar Fotos
+NO_REASON_MENU = Nenhum motivo encontrado
+
+[fr]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !y a pris une capture d'ecran sur toi !
+SS_MSG2 = !y[AMXX] Date : !g%s !y| Serveur : !t%s !y!
+SS_MSG3 = !y[AMXX] Joueur : !g%s !y| IP : !g%s !ySteamID : !g%s !y| Pays : !g%s
+SS_MSG4 = !y[AMXX] Pour se faire debannir, voir !t%s !y!
+SS_MSG_HUD = Date : %s | Serveur: %s !^nJoueur : %s IP : %s ^nSteamID : %s | Pays : %s ^nPour se faire debannir, voir %s !
+SS_CASE2 = !yADMIN !g%s !y a pris une capture d'ecran sur !g%s
+SS_CASE1 = !yADMIN a pris une capture d'ecran sur !g%s
+SS_CONSOLE = Tu as pris des captures d'ecrans de %s !
+REASON_HUDASK = ADMIN: %s^nVeuillez écrire une raison pour le ban !
+SS_MENU = Menu de Captures d'Ecran
+SSBAN_MENU = Menu de Ban avec Captures d'Ecran  
+NO_REASON_MENU = Aucune raison postee
+
+[sr]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !yje upotrebio SnapShot komandu na tebi!
+SS_MSG2 = !y[AMXX] Datum: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Igrac: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Drzava: !g%s
+SS_MSG4 = !y[AMXX] Za unban posetite !t%s !y!
+SS_MSG_HUD = Datum: %s | Server: %s !^nIgrac: %s IP: %s ^nSteamID: %s | Drzava: %s ^nZa unban posetite %s !
+SS_CASE2 = !yADMIN !g%s !yje upotrebio SnapShot komandu na !g%s
+SS_CASE1 = !yADMIN je upotrebio SnapShot komandu na !g%s
+SS_CONSOLE = Upravo si uzeo ScreeShotove od %s !
+REASON_HUDASK = ADMIN: %s^nNavedite razlog za ban !
+SS_MENU = Snapshot Meni
+SSBAN_MENU = Snapshot Ban Meni
+NO_REASON_MENU = Razlog nije naveden
+
+[lv]
+SS_MSG1 = !y[AMXX] ADMINS: !g%s !yizmantoja SnapShot komandu uz tevis!
+SS_MSG2 = !y[AMXX] Datums: !g%s !y| Serveris: !t%s !y!
+SS_MSG3 = !y[AMXX] Speletaja vards: !g%s !y| IP Adrese: !g%s !ySteamID: !g%s !y|Valsts: !g%s
+SS_MSG4 = !y[AMXX] Lai nonemtu banu ieej !t%s !y!
+SS_MSG_HUD = Datums: %s | Serveris: %s !^nSpeletaja vards: %s IP Adreses: %s ^nSteamID: %s | Valsts: %s ^nLai nonemtu banu ieej %s !
+SS_CASE2 = !yADMINS !g%s !yizmantoja SnapShot komandu uz !g%s
+SS_CASE1 = !yADMINS izmantoja SnapShot komandu uz !g%s
+SS_CONSOLE = Tu esi paneemis paaris skrinshotus no %s !
+REASON_HUDASK = Ludzu uzraksti bana iemeslu !
+SS_MENU = Snapshot Menu
+SSBAN_MENU = Snapshot Bana Menu
+NO_REASON_MENU = Nav uzstaadiits Iemesls
+
+[sk]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !ypouzil na teba prikaz SnapShot!
+SS_MSG2 = !y[AMXX] Datum: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Meno hraca: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Krajina: !g%s
+SS_MSG4 = !y[AMXX] Pre unban navstiv !t%s !y!
+SS_MSG_HUD = Datum: %s | Server: %s !^nMeno hraca: %s IP: %s ^nSteamID: %s | Krajina: %s ^nPre unban navstiv %s !
+SS_CASE2 = !yADMIN !g%s !ypouzil prikaz SnapShot na !g%s
+SS_CASE1 = !yADMIN pouzil prikaz SnapShot na !g%s
+SS_CONSOLE = Prave si spravil nejake Snapshoty %s !
+REASON_HUDASK = ADMIN: %s^nprosim napis dovod banu !
+SS_MENU = Snapshot Menu
+SSBAN_MENU = Snapshot Ban Menu
+NO_REASON_MENU = Ziaden dovod udany
+
+[tc]繁體
+SS_MSG1 = !y[AMXX] 管理員: !g%s !y對你使用了截圖指令!
+SS_MSG2 = !y[AMXX] 時間: !g%s !y| 服務器: !t%s !y!
+SS_MSG3 = !y[AMXX] 玩家名稱: !g%s !y| IP: !g%s !ySteamID: !g%s !y| 來自: !g%s
+SS_MSG4 = !y[AMXX] 如需解除封禁請聯繫 !t%s !y!
+SS_MSG_HUD = 時間 %s | 服務器: %s !^n玩家名稱: %s IP: %s ^nSteamID: %s | 來自: %s ^n如需解除封禁請聯繫 %s !
+SS_CASE2 = !y管理員 !g%s !y對 !g%s !y使用了截圖指令!
+SS_CASE1 = !y管理員對 !g%s !y使用了截圖指令!
+SS_CONSOLE = 你對 %s 使用了截圖指令!
+REASON_HUDASK = 管理員: %s^n請輸入封禁理由
+SS_MENU = 截圖菜單
+SSBAN_MENU = 截圖封禁菜單
+NO_REASON_MENU = 沒有提供理由
+
+[cn]简体
+SS_MSG1 = !y[AMXX]管理员: !g%s !y对你使用了截图指令!
+SS_MSG2 = !y[AMXX]时间: !g%s !y|服务器: !t%s !y!
+SS_MSG3 = !y[AMXX]玩家名称: !g%s !y| IP: !g%s !ySteamID: !g%s !y|来自: !g%s
+SS_MSG4 = !y[AMXX]如需解除封禁请联系!t%s !y!
+SS_MSG_HUD =时间%s |服务器: %s !^n玩家名称: %s IP: %s ^nSteamID: %s |来自: %s ^n如需解除封禁请联系%s !
+SS_CASE2 = !y管理员!g%s !y对!g%s !y使用了截图指令!
+SS_CASE1 = !y管理员对!g%s !y使用了截图指令!
+SS_CONSOLE =你对%s使用了截图指令!
+REASON_HUDASK = 管理员: %s^n请输入封禁理由
+SS_MENU =截图菜单
+SSBAN_MENU =截图封禁菜单
+NO_REASON_MENU = 没有提供理由
+
+[ar]
+SS_MSG1 = !y[AMXX] الرئيس: !g%s !yاستعمل اللقطات لك !
+SS_MSG2 = !y[AMXX] الوقت: !g%s !y| السيرفر: !t%s !y!
+SS_MSG3 = !y[AMXX] اسم اللاعب: !g%s !y| IP: !g%s !ySteamID: !g%s !y| المدينه: !g%s
+SS_MSG4 = !y[AMXX] لرفع الحضر زر !t%s !y!
+SS_MSG_HUD = التاريخ: %s | الخادم: %s !^nاسم اللاعب: %s IP: %s ^nSteamID: %s | المدينه: %s ^nبرفع الحضر زر %s !
+SS_CASE2 = !yالرئيس !g%s !yيستخدم الأمر لقطة يوم !g%s
+SS_CASE1 = !yالرئيس يستخدم الأمر لقطة يوم !g%s
+SS_CONSOLE = انت فقط اخذت لقطات من %s !
+SS_MENU = قائمه اللقطات
+SSBAN_MENU = قائمه لقطات المحضورين
+NO_REASON_MENU = No Reason Submitted
+
+[vi]
+SS_MSG1 = !y[AMXX] Người quản lý: !g%s !yđã Ghi Hình  bạn !
+SS_MSG2 = !y[AMXX] Ngày: !g%s !y| Máy chủ: !t%s !y!
+SS_MSG3 = !y[AMXX] Tên người chơi: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Quốc gia: !g%s
+SS_MSG4 = !y[AMXX] Dành cho người không phạm luật !t%s !y!
+SS_MSG_HUD = Ngày: %s | Máy chủ: %s !^nTên người chơi: %s IP: %s ^nSteamID: %s | Quốc gia: %s ^nDành cho những người không vi phạm xem %s !
+SS_CASE2 = !yNgười quản lý !g%s !yđã Ghi Hinh !g%s
+SS_CASE1 = !yNgười quản lý đã Ghi Hình !g%s
+SS_CONSOLE = Bạn vừa Ghi Hình của %s !
+REASON_HUDASK = Người quản lý: %s^nVui lòng ghi rõ lý do xử lý vi phạm !
+SS_MENU = Menu Ghi Hình
+SSBAN_MENU = Menu Ghi Hình và xử lý vi phạm
+NO_REASON_MENU = Chưa có lý do xác nhận
+
+[da]
+SS_MSG1 = !y[AMXX] ADMIN: !g%s !ybrugte kommandoen SnapShot paa dig !
+SS_MSG2 = !y[AMXX] Dato: !g%s !y| Server: !t%s !y!
+SS_MSG3 = !y[AMXX] Spiller navn: !g%s !y| IP: !g%s !ySteamID: !g%s !y| Land: !g%s
+SS_MSG4 = !y[AMXX] Forespoerg unban paa !t%s !y!
+SS_MSG_HUD = Dato: %s | Server: %s !^nSpiller Navn: %s IP: %s ^nSteamID: %s | Land: %s ^nForespoerg unban paa %s !
+SS_CASE2 = !yADMIN !g%s !ybrugte kommandoen SnapShot paa !g%s
+SS_CASE1 = !yADMIN brugte kommandoen SnapShot paa !g%s
+SS_CONSOLE = Du har lige taget nogle Snapshots af %s !
+REASON_HUDASK = ADMIN: %s^nSkriv en ban aarsag !
+SS_MENU = Snapshot Menu
+SSBAN_MENU = Snapshot Ban Menu
+NO_REASON_MENU = Ingen ban aarsag
+
+[1337]
+SS_MSG1 = !y[4mxx] 4dm!n: !g%s !yu53d (0mm4nd 5n4p5h07 0n y0u !
+SS_MSG2 = !y[4mxx] d473: !g%s !y| 53rv3r: !t%s !y!
+SS_MSG3 = !y[4mxx] p14y3r n4m3: !g%s !y| !p: !g%s !y5734m!d: !g%s !y| (0un7ry: !g%s
+SS_MSG4 = !y[4mxx] f0r un84n v!5!7 !t%s !y!
+SS_MSG_HUD = d473: %s | 53rv3r: %s !^np14y3r n4m3: %s !p: %s ^n5734m!d: %s | (0un7ry: %s ^nf0r un84n v!5!7 %s !
+SS_CASE2 = !y4dm!n !g%s !yu53d (0mm4nd 5n4p5h07 0n !g%s
+SS_CASE1 = !y4dm!n u53d (0mm4nd 5n4p5h07 0n !g%s
+SS_CONSOLE = y0u h4v3 ju57 74k3n 50m3 5n4p5h075 0f %s !
+REASON_HUDASK = 4DM!N: %s^nPl34s3 7yp3 4 b4n r3450n !
+SS_MENU = 5n4p5h07 m3nu
+SSBAN_MENU = 5n4p5h07 84n m3nu
+NO_REASON_MENU = n0 r3450n 5u8m!773d
