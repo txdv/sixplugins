@@ -4,6 +4,9 @@
 #include <fun>
 #include <cstrike>
 
+#pragma semicolon 1
+#pragma ctrlchar '\'
+
 new g_enabled = 0;
 
 new gcv_knifedm,
@@ -25,14 +28,14 @@ public start()
 	if (get_pcvar_num(gcv_knifedm))
 	{
 		g_enabled = 1;
-		set_task(get_pcvar_float(gcv_knifedm_delay), "start_game")
+		set_task(get_pcvar_float(gcv_knifedm_delay), "start_game");
 	}
 }
 
 public start_game()
 {
 	g_enabled = 0;
-	server_cmd("sv_restart 1")
+	server_cmd("sv_restart 1");
 }
 
 public fwHamPlayerSpawnPost(id) {
