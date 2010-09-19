@@ -57,6 +57,7 @@ public plugin_init()
 	register_cvar("irc_channel","")
 	
 	
+	register_cvar("irc_prefix","1")
 	register_cvar("irc_showjoins","1")
 	register_cvar("irc_joindelay","10")
 	register_cvar("irc_identify","0")
@@ -331,7 +332,10 @@ public irc_dataparse(rdata[])
 				new firstword[128]
 				copyc(firstword,128,message[1],44)        
 				// Its a message that should go to the server
-				format(frmt,256,"*IRC* <%s> %s",user,message[1])
+				if (get_cvar_num("irc_prefix"))
+					format(frmt,256,"%s@%s <%s> %s",chan,server,user,message[1])
+				else
+					format(frmt,256,"*IRC* <%s> %s",user,message[1])
 				if(!get_cvar_num("irc_to_hlds_say_auto"))
 				{
 					new activator[26]
