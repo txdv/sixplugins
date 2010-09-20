@@ -20,8 +20,9 @@ public plugin_init()
 {
 	register_plugin("knifedm", "0.2", "txdv");
 
-	gcv_knifedm       = register_cvar("knifedm",       "1");
-	gcv_knifedm_delay = register_cvar("knifedm_delay", "40.0");
+	gcv_knifedm         = register_cvar("knifedm",         "1");
+	gcv_knifedm_delay   = register_cvar("knifedm_delay",   "40");
+	gcv_knifedm_message = register_cvar("knifedm_message", "1");
 
 	register_concmd("knifedm_start", "cmd_knifedm_start", ADMIN_IMMUNITY, "<knifedm time in seconds, 0 for indefinite, blank = knifedm_delay>");
 	register_concmd("knifedm_end", "cmd_knifedm_end", ADMIN_IMMUNITY);
@@ -92,7 +93,8 @@ public start_normal()
 
 public fwHamPlayerSpawnPost(id)
 {
-  if (g_enabled && is_user_alive(id) && !is_user_bot(id)) {
+  if (g_enabled && is_user_alive(id) && !is_user_bot(id))
+	{
 		clear_player(id);
 	}
 }
@@ -103,7 +105,12 @@ public clear_player(id)
 	set_pdata_int(id, 116, 0);
 	give_item(id, "weapon_knife");
 	cs_set_user_money(id, 0);
-	if (g_time) send_messages(id, g_time - (get_systime() - g_starttime));
+
+	if (get_pcvar_num(gcv_message))
+	{
+		// if the time is not indefinite
+		if (g_time) send_messages(id, g_time - (get_systime() - g_starttime));
+	}
 }
 
 public send_messages(id, time)
