@@ -15,15 +15,17 @@ new g_enabled = 0,
 
 new gcv_knifedm,
     gcv_knifedm_delay,
-		gcv_knifedm_message;
+		gcv_knifedm_message,
+		gcv_knifedm_knifeonly;
 
 public plugin_init()
 {
 	register_plugin("knifedm", "0.2", "txdv");
 
-	gcv_knifedm         = register_cvar("knifedm",         "1");
-	gcv_knifedm_delay   = register_cvar("knifedm_delay",   "40");
-	gcv_knifedm_message = register_cvar("knifedm_message", "1");
+	gcv_knifedm            = register_cvar("knifedm",            "1" );
+	gcv_knifedm_delay      = register_cvar("knifedm_delay",      "40");
+	gcv_knifedm_message    = register_cvar("knifedm_message",    "1" );
+	gcv_knifedm_knifeonly  = register_cvar("knifedm_knifeonly",  "1" );
 
 	register_concmd("knifedm_start", "cmd_knifedm_start", ADMIN_IMMUNITY, "<knifedm time in seconds, 0 for indefinite, blank = knifedm_delay>");
 	register_concmd("knifedm_end", "cmd_knifedm_end", ADMIN_IMMUNITY);
@@ -117,10 +119,13 @@ knifedm_is_enabled()
 
 clear_player(id)
 {
-	strip_user_weapons(id);
-	set_pdata_int(id, 116, 0);
-	give_item(id, "weapon_knife");
-	cs_set_user_money(id, 0);
+	if (get_pcvar_num(gcv_knifedm_knifeonly))
+	{
+		strip_user_weapons(id);
+		set_pdata_int(id, 116, 0);
+		give_item(id, "weapon_knife");
+		cs_set_user_money(id, 0);
+	}
 
 	if (get_pcvar_num(gcv_knifedm_message))
 	{
