@@ -14,7 +14,8 @@ new g_enabled = 0,
 		g_time;
 
 new gcv_knifedm,
-    gcv_knifedm_delay;
+    gcv_knifedm_delay,
+		gcv_knifedm_message;
 
 public plugin_init()
 {
@@ -60,7 +61,7 @@ public cmd_knifedm_start(client, level, cid)
 public cmd_knifedm_end(client, level, cid)
 {
 	if (!cmd_access(client, level, cid, 0)) return PLUGIN_HANDLED;
-	start_normal();
+	end_knifedm();
 	return PLUGIN_HANDLED;
 }
 
@@ -68,35 +69,50 @@ public game_start_event()
 {
 	if (get_pcvar_num(gcv_knifedm))
 	{
-		if (!g_enabled) start_knifedm(get_pcvar_num(gcv_knifedm_delay));
+		if (!knifedm_is_enabled()) start_knifedm(get_pcvar_num(gcv_knifedm_delay));
+	}
+}
+
+public fwHamPlayerSpawnPost(id)
+{
+  if (knifedm_is_enabled() && is_user_alive(id) && !is_user_bot(id))
+	{
+		clear_player(id);
 	}
 }
 
 public start_knifedm(time)
 {
-	if (g_enabled && g_time) remove_task(g_taskid);
-	g_enabled = 1;
+	if (knifedm_is_enabled() && g_time) remove_task(g_taskid);
+	knifedm_enable();
 	g_starttime = get_systime();
 	g_time = time;
 	if (g_time)
 	{
 		g_taskid = get_free_task_id();
-		set_task(float(time), "start_normal", g_taskid);
+		set_task(float(time), "end_knifedm", g_taskid);
 	}
 }
 
-public start_normal()
+public end_knifedm()
 {
-	g_enabled = 0;
+	knifedm_disable();
 	server_cmd("sv_restart 1");
 }
 
-public fwHamPlayerSpawnPost(id)
+public knifedm_enable()
 {
-  if (g_enabled && is_user_alive(id) && !is_user_bot(id))
-	{
-		clear_player(id);
-	}
+	g_enabled = 1;
+}
+
+public knifedm_disable()
+{
+	g_enabled = 0;
+}
+
+public knifedm_is_enabled()
+{
+	return g_enabled;
 }
 
 public clear_player(id)
@@ -106,7 +122,7 @@ public clear_player(id)
 	give_item(id, "weapon_knife");
 	cs_set_user_money(id, 0);
 
-	if (get_pcvar_num(gcv_message))
+	if (get_pcvar_num(gcv_knifedm_message))
 	{
 		// if the time is not indefinite
 		if (g_time) send_messages(id, g_time - (get_systime() - g_starttime));
