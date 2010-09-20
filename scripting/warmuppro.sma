@@ -661,7 +661,7 @@ public plugin_init()
 	timeprotect = register_cvar("wup_protecttime", "3")
 	/*    5.0 News Cvars   */
 	ganador = register_cvar("wup_winner", "1")
-	mostrarhud = register_cvar("wup_showhud", "1")
+	mostrarhud = register_cvar("wup_message", "1")
 	
 	wup_fwd_start = CreateMultiForward("wup_startwarmup", ET_IGNORE);
 	wup_fwd_finish = CreateMultiForward("wup_finishwarmup", ET_IGNORE);
@@ -1382,6 +1382,27 @@ public restart_time()
 		{
 			set_hudmessage( r, g, b, get_pcvar_float(cvar_x), get_pcvar_float(cvar_y), 1, 6.0, 6.0); 
 			ShowSyncHudMsg(0, sync, "%L", LANG_PLAYER, "MP_DISPLAY", time_s);
+		}
+		else if ( get_pcvar_num(mostrarhud) == 2 )
+		{
+			new sz_buffer[8];
+			format(sz_buffer, sizeof(sz_buffer) - 1, "%d", time_s);
+
+			//TextMsg(77)(AllReliable, 0, 0)(byte:4, string:"#Game_will_restart_in", string:"1", string:"SECOND");
+			message_begin(MSG_ALL, get_user_msgid("TextMsg"), _, _);
+			write_byte(4);
+			write_string("#Game_will_restart_in");
+			write_string(sz_buffer);
+			write_string("SECOND");
+			message_end();
+
+			//TextMsg(77)(AllReliable, 0, 0)(byte:2, string:"#Game_will_restart_in_console", string:"1", string:"SECOND");
+			message_begin(MSG_ALL, get_user_msgid("TextMsg"), _, _);
+			write_byte(2);
+			write_string("#Game_will_restart_in_console");
+			write_string(sz_buffer);
+			write_string("SECOND");
+			message_end();
 		}
 		
 		--time_s; 
