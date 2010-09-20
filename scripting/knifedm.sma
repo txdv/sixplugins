@@ -68,7 +68,7 @@ public game_start_event()
 {
 	if (get_pcvar_num(gcv_knifedm))
 	{
-		start_knifedm(get_pcvar_num(gcv_knifedm_delay));
+		if (!g_enabled) start_knifedm(get_pcvar_num(gcv_knifedm_delay));
 	}
 }
 
