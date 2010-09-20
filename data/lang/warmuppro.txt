@@ -36,3 +36,6 @@ MP_DISPLAY = Warmup Runda:^n%i jos sekundi
 
 [lv]
 MP_DISPLAY = Iesildisanas rounds:^n%i sekundes atlikusas
+
+[lt]
+MP_DISPLAY = Apsilimo ratas:^nliko %i sekundes
