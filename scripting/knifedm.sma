@@ -28,7 +28,7 @@ public plugin_init()
 	register_concmd("knifedm_start", "cmd_knifedm_start", ADMIN_IMMUNITY, "<knifedm time in seconds, 0 for indefinite, blank = knifedm_delay>");
 	register_concmd("knifedm_end", "cmd_knifedm_end", ADMIN_IMMUNITY);
 
-	RegisterHam(Ham_Spawn, "player", "fwHamPlayerSpawnPost", 1);
+	RegisterHam(Ham_Spawn, "player", "forward_ham_player_spawn_post", 1);
 	register_event("TextMsg", "game_start_event", "a", "2&#Game_C");
 }
 
@@ -73,7 +73,7 @@ public game_start_event()
 	}
 }
 
-public fwHamPlayerSpawnPost(id)
+public forward_ham_player_spawn_post(id)
 {
   if (knifedm_is_enabled() && is_user_alive(id) && !is_user_bot(id))
 	{
@@ -100,22 +100,22 @@ public end_knifedm()
 	server_cmd("sv_restart 1");
 }
 
-public knifedm_enable()
+knifedm_enable()
 {
 	g_enabled = 1;
 }
 
-public knifedm_disable()
+knifedm_disable()
 {
 	g_enabled = 0;
 }
 
-public knifedm_is_enabled()
+knifedm_is_enabled()
 {
 	return g_enabled;
 }
 
-public clear_player(id)
+clear_player(id)
 {
 	strip_user_weapons(id);
 	set_pdata_int(id, 116, 0);
@@ -129,7 +129,7 @@ public clear_player(id)
 	}
 }
 
-public send_messages(id, time)
+send_messages(id, time)
 {
 	new sz_buffer[8];
 	format(sz_buffer, sizeof(sz_buffer) - 1, "%d", time);
@@ -151,7 +151,7 @@ public send_messages(id, time)
 	message_end();
 }
 
-public get_free_task_id()
+get_free_task_id()
 {
 	for (new i = 0;; i++) if (!task_exists(i)) return i;
 }
