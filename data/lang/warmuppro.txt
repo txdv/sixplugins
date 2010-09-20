@@ -1,0 +1,38 @@
+﻿[en]
+MP_DISPLAY = Warmup Round:^n%i seconds left
+
+[de]
+MP_DISPLAY = Aufwaermrunde:^n Noch %i Sekunden
+
+[nl]
+MP_DISPLAY = Opwarm ronde:^n%i seconden over
+
+[fr]
+MP_DISPLAY = Partie d'echauffement:^n%i seconde(s) restante(s)
+
+[bp]
+MP_DISPLAY = Round de aquecimento:^n%i segundos restantes
+
+[es]
+MP_DISPLAY = Ronda de Calentamiento:^n%i segundos restantes
+
+[sv]
+MP_DISPLAY = Uppvarmnings runda:^n%i sekunder kvar
+
+[fi]
+MP_DISPLAY = L'a'mmittelykierros:^n%i sekunttia j'a'ljell'a'
+
+[ro]
+MP_DISPLAY = Runda de incalzire:^n%i secunde ramase
+
+[da]
+MP_DISPLAY = Opvarmningsrunden:^n%i sekunder tilbage
+
+[pl]
+MP_DISPLAY = Runda rozgrzewkowa:^n%i sekund do konca
+
+[sr]
+MP_DISPLAY = Warmup Runda:^n%i jos sekundi
+
+[lv]
+MP_DISPLAY = Iesildisanas rounds:^n%i sekundes atlikusas
