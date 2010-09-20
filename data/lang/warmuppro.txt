@@ -42,3 +42,6 @@ MP_DISPLAY = Apsilimo ratas:^nliko %i sekundes
 
 [cz]
 MP_DISPLAY = Rozehra:^n%i sekund zbyva
+
+[tr]
+MP_DISPLAY = Turda isinmaya:^n%i saniye kaldi
