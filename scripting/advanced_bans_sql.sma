@@ -406,7 +406,7 @@ public QueryCreateTable(failstate, Handle:query, error[], errcode, data[], datas
 	}
 	else if( failstate == TQUERY_QUERY_FAILED )
 	{
-		set_fail_state("Query failed.");
+		set_fail_state("QueryCreateTable: Query failed.");
 	}
 	else if( errcode )
 	{
@@ -1053,7 +1053,7 @@ public QueryAddBan(failstate, Handle:query, error[], errcode, data[], datasize, 
 	}
 	else if( failstate == TQUERY_QUERY_FAILED )
 	{
-		set_fail_state("Query failed.");
+		set_fail_state("QueryAddBan: Query failed.");
 	}
 	else if( errcode )
 	{
@@ -1073,7 +1073,7 @@ public QueryDeleteBan(failstate, Handle:query, error[], errcode, data[], datasiz
 	}
 	else if( failstate == TQUERY_QUERY_FAILED )
 	{
-		set_fail_state("Query failed.");
+		set_fail_state("QueryDeleteBan: Query failed.");
 	}
 	else if( errcode )
 	{
@@ -1093,7 +1093,7 @@ public QueryLoadBans(failstate, Handle:query, error[], errcode, data[], datasize
 	}
 	else if( failstate == TQUERY_QUERY_FAILED )
 	{
-		set_fail_state("Query failed.");
+		set_fail_state("QueryLoadBans: Query failed.");
 	}
 	else if( errcode )
 	{
