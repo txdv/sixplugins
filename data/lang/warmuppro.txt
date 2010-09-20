@@ -39,3 +39,6 @@ MP_DISPLAY = Iesildisanas rounds:^n%i sekundes atlikusas
 
 [lt]
 MP_DISPLAY = Apsilimo ratas:^nliko %i sekundes
+
+[cz]
+MP_DISPLAY = Rozehra:^n%i sekund zbyva
