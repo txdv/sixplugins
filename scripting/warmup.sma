@@ -13,32 +13,32 @@ new g_enabled = 0,
 		g_taskid,
 		g_time;
 
-new gcv_knifedm,
-    gcv_knifedm_delay,
-		gcv_knifedm_message,
-		gcv_knifedm_knifeonly;
+new gcv_warmup,
+    gcv_warmup_time,
+		gcv_warmup_message,
+		gcv_warmup_knifeonly;
 
 public plugin_init()
 {
-	register_plugin("knifedm", "0.2", "txdv");
+	register_plugin("warmup", "0.3", "Andrius Bentkus");
 
-	gcv_knifedm            = register_cvar("knifedm",            "1" );
-	gcv_knifedm_delay      = register_cvar("knifedm_delay",      "40");
-	gcv_knifedm_message    = register_cvar("knifedm_message",    "1" );
-	gcv_knifedm_knifeonly  = register_cvar("knifedm_knifeonly",  "1" );
+	gcv_warmup            = register_cvar("warmup",            "1" );
+	gcv_warmup_time       = register_cvar("warmup_time",       "40");
+	gcv_warmup_message    = register_cvar("warmup_message",    "1" );
+	gcv_warmup_knifeonly  = register_cvar("warmup_knifeonly",  "0" );
 
-	register_concmd("knifedm_start", "cmd_knifedm_start", ADMIN_IMMUNITY, "<knifedm time in seconds, 0 for indefinite, blank = knifedm_delay>");
-	register_concmd("knifedm_end", "cmd_knifedm_end", ADMIN_IMMUNITY);
+	register_concmd("warmup_start", "cmd_warmup_start", ADMIN_IMMUNITY, "<warmup time in seconds, 0 for indefinite, blank = warmup_delay>");
+	register_concmd("warmup_end", "cmd_warmup_end", ADMIN_IMMUNITY);
 
 	RegisterHam(Ham_Spawn, "player", "forward_ham_player_spawn_post", 1);
 	register_event("TextMsg", "game_start_event", "a", "2&#Game_C");
 }
 
-public cmd_knifedm_start(client, level, cid)
+public cmd_warmup_start(client, level, cid)
 {
 	if (!cmd_access(client, level, cid, 0)) return PLUGIN_HANDLED;
 
-	new len = get_pcvar_num(gcv_knifedm_delay);
+	new len = get_pcvar_num(gcv_warmup_time);
 
 	if (read_argc() > 1)
 	{
@@ -53,73 +53,73 @@ public cmd_knifedm_start(client, level, cid)
 	get_players(players, player_count, "a");
 
 	// start the counter
-	start_knifedm(len);
+	start_warmup(len);
 	// and loop through all players, take everything away, send message
 	for (new i = 0; i < player_count; i++) clear_player(players[i]);
 
 	return PLUGIN_HANDLED;
 }
 
-public cmd_knifedm_end(client, level, cid)
+public cmd_warmup_end(client, level, cid)
 {
 	if (!cmd_access(client, level, cid, 0)) return PLUGIN_HANDLED;
-	end_knifedm();
+	end_warmup();
 	return PLUGIN_HANDLED;
 }
 
 public game_start_event()
 {
-	if (get_pcvar_num(gcv_knifedm))
+	if (get_pcvar_num(gcv_warmup))
 	{
-		if (!knifedm_is_enabled()) start_knifedm(get_pcvar_num(gcv_knifedm_delay));
+		if (!warmup_is_enabled()) start_warmup(get_pcvar_num(gcv_warmup_time));
 	}
 }
 
 public forward_ham_player_spawn_post(id)
 {
-  if (knifedm_is_enabled() && is_user_alive(id) && !is_user_bot(id))
+  if (warmup_is_enabled() && is_user_alive(id) && !is_user_bot(id))
 	{
 		clear_player(id);
 	}
 }
 
-public start_knifedm(time)
+public start_warmup(time)
 {
-	if (knifedm_is_enabled() && g_time) remove_task(g_taskid);
-	knifedm_enable();
+	if (warmup_is_enabled() && g_time) remove_task(g_taskid);
+	warmup_enable();
 	g_starttime = get_systime();
 	g_time = time;
 	if (g_time)
 	{
 		g_taskid = get_free_task_id();
-		set_task(float(time), "end_knifedm", g_taskid);
+		set_task(float(time), "end_warmup", g_taskid);
 	}
 }
 
-public end_knifedm()
+public end_warmup()
 {
-	knifedm_disable();
+	warmup_disable();
 	server_cmd("sv_restart 1");
 }
 
-knifedm_enable()
+warmup_enable()
 {
 	g_enabled = 1;
 }
 
-knifedm_disable()
+warmup_disable()
 {
 	g_enabled = 0;
 }
 
-knifedm_is_enabled()
+warmup_is_enabled()
 {
 	return g_enabled;
 }
 
 clear_player(id)
 {
-	if (get_pcvar_num(gcv_knifedm_knifeonly))
+	if (get_pcvar_num(gcv_warmup_knifeonly))
 	{
 		strip_user_weapons(id);
 		set_pdata_int(id, 116, 0);
@@ -127,7 +127,7 @@ clear_player(id)
 		cs_set_user_money(id, 0);
 	}
 
-	if (get_pcvar_num(gcv_knifedm_message))
+	if (get_pcvar_num(gcv_warmup_message))
 	{
 		// if the time is not indefinite
 		if (g_time) send_messages(id, g_time - (get_systime() - g_starttime));
