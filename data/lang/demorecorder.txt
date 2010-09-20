@@ -57,7 +57,3 @@ RECORDINGAT = Demo rakstisana ir sakusies %s
 [tr]
 RECORDINGIN = cstrike klasorunuze kaydedildi
 RECORDINGAT = Demo kayidi baslamistir %s
-
-[lt]
-RECORDINGIN = Prasidejo demo irasymas cstrike aplankale
-RECORDINGAT = Buvo pradeta %s.
