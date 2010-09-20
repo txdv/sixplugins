@@ -389,7 +389,7 @@ public plugin_init()
 #if defined USING_SQL
 PrepareTable()
 {
-	new query[128];
+	new query[512];
 	formatex(query, sizeof(query) - 1,\
 		"CREATE TABLE IF NOT EXISTS `%s` (`%s` varchar(32) NOT NULL, `%s` varchar(35) NOT NULL, `%s` int(10) NOT NULL, `%s` varchar(32) NOT NULL, `%s` varchar(128) NOT NULL, `%s` varchar(64) NOT NULL, `%s` varchar(35) NOT NULL);",\
 		TABLE_NAME, KEY_NAME, KEY_STEAMID, KEY_BANLENGTH, KEY_UNBANTIME, KEY_REASON, KEY_ADMIN_NAME, KEY_ADMIN_STEAMID
