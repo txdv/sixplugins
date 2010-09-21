@@ -12,17 +12,19 @@ new g_enabled = 0,
     g_starttime,
 		g_taskid,
 		g_time,
-		g_buy = 1;
+		g_buy = 1,
+		g_armoury_invisibility = 0;
 
 // Setters and getters for some variables
 
-warmup_enable() { g_enabled = 1; }
-warmup_disable() { g_enabled = 0; }
-warmup_is_enabled() { return g_enabled; }
+warmup_set(i) { g_enabled = i; }
+warmup_get() { return g_enabled; }
 
-warmup_buy_enable() { g_buy = 1; }
-warmup_buy_disable() { g_buy = 0; }
-warmup_buy_is_enabled() { return g_buy; }
+warmup_buy_set(i) { g_buy = i; }
+warmup_buy_get() { return g_buy; }
+
+warmup_armoury_invis_set(i) { g_armoury_invisibility = i; }
+warmup_armoury_invis_get() { return g_armoury_invisibility; }
 
 // cvar global variables
 
@@ -32,11 +34,12 @@ new gcv_warmup,
 		gcv_warmup_knifeonly,
 		gcv_warmup_knifeonly_hud,
 		gcv_warmup_dm,
-		gcv_warmup_dm_time;
+		gcv_warmup_dm_time,
+		gcv_warmup_armoury_invis;
 
 public plugin_init()
 {
-	register_plugin("warmup", "0.3", "Andrius Bentkus");
+	register_plugin("warmup", "0.4", "Andrius Bentkus");
 
 	gcv_warmup               = register_cvar("warmup",               "1"  );
 	gcv_warmup_time          = register_cvar("warmup_time",          "40" );
@@ -45,12 +48,15 @@ public plugin_init()
 	gcv_warmup_knifeonly_hud = register_cvar("warmup_knifeonly_hud", "0"  );
 	gcv_warmup_dm            = register_cvar("warmup_dm",            "0"  );
 	gcv_warmup_dm_time       = register_cvar("warmup_dm_time",       "0.2");
+	gcv_warmup_armoury_invis = register_cvar("warmup_armoury_invis", "0"  );
 
 	register_concmd("warmup_start", "cmd_warmup_start", ADMIN_IMMUNITY, "<warmup time in seconds, 0 for indefinite, blank = warmup_delay>");
 	register_concmd("warmup_end",   "cmd_warmup_end",   ADMIN_IMMUNITY);
 
 	register_event("TextMsg", "game_start_event", "a", "2&#Game_C");
-	register_message(get_user_msgid("StatusIcon"), "msg_status_icon");
+	register_event("HLTV", "new_round_event", "a", "1=0", "2=0");
+
+	register_message(get_user_msgid("StatusIcon"), "msg_status_icon_message");
 	RegisterHam(Ham_Spawn, "player", "forward_ham_player_spawn_post", 1);
 	RegisterHam(Ham_Killed, "player", "forward_ham_player_killed_pre", 0);
 }
@@ -96,13 +102,26 @@ public game_start_event()
 {
 	if (get_pcvar_num(gcv_warmup))
 	{
-		if (!warmup_is_enabled()) start_warmup(get_pcvar_num(gcv_warmup_time));
+		if (!warmup_get()) start_warmup(get_pcvar_num(gcv_warmup_time));
 	}
+}
+
+new g_forward_start_frame_id;
+public new_round_event()
+{
+	if (warmup_get() && warmup_armoury_invis_get())
+		g_forward_start_frame_id = register_forward(FM_StartFrame, "forward_start_frame");
+}
+
+public forward_start_frame()
+{
+	unregister_forward(FM_StartFrame, g_forward_start_frame_id);
+	set_armoury_invisibility(true, true, false);
 }
 
 public forward_ham_player_killed_pre(victim)
 {
-	if (warmup_is_enabled() && get_pcvar_num(gcv_warmup_dm))
+	if (warmup_get() && get_pcvar_num(gcv_warmup_dm))
 	{
 		set_task(get_pcvar_float(gcv_warmup_dm_time), "respawn_player", victim);
 	}
@@ -115,17 +134,17 @@ public respawn_player(id)
 
 public forward_ham_player_spawn_post(id)
 {
-  if (warmup_is_enabled() && is_user_alive(id) && !is_user_bot(id))
+  if (warmup_get() && is_user_alive(id) && !is_user_bot(id))
 	{
 		handle_player(id);
 	}
 }
 
-public msg_status_icon(msgid, msgdest, id)
+public msg_status_icon_message(msgid, msgdest, id)
 {
 	// Thanks to grimvh2
 	// Site: http://forums.alliedmods.net/showpost.php?p=1281450
-	if (!warmup_buy_is_enabled())
+	if (!warmup_buy_get())
 	{
 		static sz_msg[8];
 		get_msg_arg_string(2, sz_msg, 7);
@@ -143,12 +162,15 @@ public msg_status_icon(msgid, msgdest, id)
 
 public start_warmup(time)
 {
-	if (warmup_is_enabled() && g_time) remove_task(g_taskid);
-	warmup_enable();
+	if (warmup_get() && g_time) remove_task(g_taskid);
+	warmup_set(true);
 	g_starttime = get_systime();
 	g_time = time;
 
-	if (get_pcvar_num(gcv_warmup_knifeonly)) warmup_buy_disable();
+	warmup_buy_set(!get_pcvar_num(gcv_warmup_knifeonly));
+	warmup_armoury_invis_set(get_pcvar_num(gcv_warmup_armoury_invis));
+
+	set_armoury_invisibility(warmup_armoury_invis_get());
 
 	if (g_time)
 	{
@@ -159,15 +181,20 @@ public start_warmup(time)
 
 public end_warmup()
 {
-	warmup_disable();
-	warmup_buy_enable();
+	warmup_set(false);
+	warmup_buy_set(true);
+	if (warmup_armoury_invis_get())
+	{
+		set_armoury_invisibility(false, false, true);
+		warmup_armoury_invis_set(false);
+	}
 	server_cmd("sv_restart 1");
 }
 
 handle_player(id)
 {
 	//if (get_pcvar_num(gcv_warmup_knifeonly))
-	if (!warmup_buy_is_enabled())
+	if (!warmup_buy_get())
 	{
 		strip_user_weapons(id);
 		set_pdata_int(id, 116, 0);
@@ -209,6 +236,20 @@ send_hud_message(id, hide)
 	message_begin(id ? MSG_ONE : MSG_ALL, get_user_msgid("HideWeapon"), _, id);
 	write_byte(hide ? (1<<7) : (1<<5));
 	message_end();
+}
+
+set_armoury_invisibility(val, visibility = true, touch = true)
+{
+  static ent = FM_NULLENT;
+  while ((ent = engfunc(EngFunc_FindEntityByString, ent, "classname", "armoury_entity"))) {
+    if (val) {
+      if (visibility) set_pev(ent, pev_effects, pev(ent, pev_effects) | EF_NODRAW);
+      if (touch) set_pev(ent, pev_solid, SOLID_NOT);
+    } else {
+      if (visibility) set_pev(ent, pev_effects, pev(ent, pev_effects) & ~EF_NODRAW);
+      if (touch) set_pev(ent, pev_solid, SOLID_TRIGGER);
+    }
+  }
 }
 
 get_free_task_id()
