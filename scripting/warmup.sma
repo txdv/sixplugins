@@ -11,28 +11,46 @@
 new g_enabled = 0,
     g_starttime,
 		g_taskid,
-		g_time;
+		g_time,
+		g_buy = 1;
+
+// Setters and getters for some variables
+
+warmup_enable() { g_enabled = 1; }
+warmup_disable() { g_enabled = 0; }
+warmup_is_enabled() { return g_enabled; }
+
+warmup_buy_enable() { g_buy = 1; }
+warmup_buy_disable() { g_buy = 0; }
+warmup_buy_is_enabled() { return g_buy; }
+
+// cvar global variables
 
 new gcv_warmup,
     gcv_warmup_time,
 		gcv_warmup_message,
-		gcv_warmup_knifeonly;
+		gcv_warmup_knifeonly,
+		gcv_warmup_knifeonly_hud;
 
 public plugin_init()
 {
 	register_plugin("warmup", "0.3", "Andrius Bentkus");
 
-	gcv_warmup            = register_cvar("warmup",            "1" );
-	gcv_warmup_time       = register_cvar("warmup_time",       "40");
-	gcv_warmup_message    = register_cvar("warmup_message",    "1" );
-	gcv_warmup_knifeonly  = register_cvar("warmup_knifeonly",  "0" );
+	gcv_warmup               = register_cvar("warmup",               "1" );
+	gcv_warmup_time          = register_cvar("warmup_time",          "40");
+	gcv_warmup_message       = register_cvar("warmup_message",       "1" );
+	gcv_warmup_knifeonly     = register_cvar("warmup_knifeonly",     "0" );
+	gcv_warmup_knifeonly_hud = register_cvar("warmup_knifeonly_hud", "1" );
 
 	register_concmd("warmup_start", "cmd_warmup_start", ADMIN_IMMUNITY, "<warmup time in seconds, 0 for indefinite, blank = warmup_delay>");
-	register_concmd("warmup_end", "cmd_warmup_end", ADMIN_IMMUNITY);
+	register_concmd("warmup_end",   "cmd_warmup_end",   ADMIN_IMMUNITY);
 
 	RegisterHam(Ham_Spawn, "player", "forward_ham_player_spawn_post", 1);
 	register_event("TextMsg", "game_start_event", "a", "2&#Game_C");
+	register_message(get_user_msgid("StatusIcon"), "msg_status_icon");
 }
+
+// commands
 
 public cmd_warmup_start(client, level, cid)
 {
@@ -55,7 +73,7 @@ public cmd_warmup_start(client, level, cid)
 	// start the counter
 	start_warmup(len);
 	// and loop through all players, take everything away, send message
-	for (new i = 0; i < player_count; i++) clear_player(players[i]);
+	for (new i = 0; i < player_count; i++) handle_player(players[i]);
 
 	return PLUGIN_HANDLED;
 }
@@ -66,6 +84,8 @@ public cmd_warmup_end(client, level, cid)
 	end_warmup();
 	return PLUGIN_HANDLED;
 }
+
+// events, hooks, forwards
 
 public game_start_event()
 {
@@ -79,9 +99,29 @@ public forward_ham_player_spawn_post(id)
 {
   if (warmup_is_enabled() && is_user_alive(id) && !is_user_bot(id))
 	{
-		clear_player(id);
+		handle_player(id);
 	}
 }
+
+public msg_status_icon(msgid, msgdest, id)
+{
+	// Thanks to grimvh2
+	// Site: http://forums.alliedmods.net/showpost.php?p=1281450
+	if (!warmup_buy_is_enabled())
+	{
+		static sz_msg[8];
+		get_msg_arg_string(2, sz_msg, 7);
+		if (equal(sz_msg, "buyzone") && get_msg_arg_int(1))
+		{
+			set_pdata_int(id, 235, get_pdata_int(id, 235) & ~(1 << 0));
+			return PLUGIN_HANDLED;
+		}
+		return PLUGIN_CONTINUE;
+	}
+	return PLUGIN_CONTINUE;
+}
+
+// custom commands
 
 public start_warmup(time)
 {
@@ -89,6 +129,9 @@ public start_warmup(time)
 	warmup_enable();
 	g_starttime = get_systime();
 	g_time = time;
+
+	if (get_pcvar_num(gcv_warmup_knifeonly)) warmup_buy_disable();
+
 	if (g_time)
 	{
 		g_taskid = get_free_task_id();
@@ -99,48 +142,35 @@ public start_warmup(time)
 public end_warmup()
 {
 	warmup_disable();
+	warmup_buy_enable();
 	server_cmd("sv_restart 1");
 }
 
-warmup_enable()
+handle_player(id)
 {
-	g_enabled = 1;
-}
-
-warmup_disable()
-{
-	g_enabled = 0;
-}
-
-warmup_is_enabled()
-{
-	return g_enabled;
-}
-
-clear_player(id)
-{
-	if (get_pcvar_num(gcv_warmup_knifeonly))
+	//if (get_pcvar_num(gcv_warmup_knifeonly))
+	if (!warmup_buy_is_enabled())
 	{
 		strip_user_weapons(id);
 		set_pdata_int(id, 116, 0);
 		give_item(id, "weapon_knife");
-		cs_set_user_money(id, 0);
+		if (!get_pcvar_num(gcv_warmup_knifeonly_hud)) send_hud_message(id, 0);
 	}
 
 	if (get_pcvar_num(gcv_warmup_message))
 	{
-		// if the time is not indefinite
-		if (g_time) send_messages(id, g_time - (get_systime() - g_starttime));
+		// if the time is not indefinite, send a message to inform the player
+		if (g_time) send_restart_messages(id, g_time - (get_systime() - g_starttime));
 	}
 }
 
-send_messages(id, time)
+send_restart_messages(id, time)
 {
 	new sz_buffer[8];
 	format(sz_buffer, sizeof(sz_buffer) - 1, "%d", time);
 
 	//TextMsg(77)(AllReliable, 0, 0)(byte:4, string:"#Game_will_restart_in", string:"1", string:"SECOND");
-	message_begin(MSG_ONE, get_user_msgid("TextMsg"), _, id);
+	message_begin(id ? MSG_ONE : MSG_ALL, get_user_msgid("TextMsg"), _, id);
 	write_byte(4);
 	write_string("#Game_will_restart_in");
 	write_string(sz_buffer);
@@ -148,7 +178,7 @@ send_messages(id, time)
 	message_end();
 
 	//TextMsg(77)(AllReliable, 0, 0)(byte:2, string:"#Game_will_restart_in_console", string:"1", string:"SECOND");
-	message_begin(MSG_ONE, get_user_msgid("TextMsg"), _, id);
+	message_begin(id ? MSG_ONE : MSG_ALL, get_user_msgid("TextMsg"), _, id);
 	write_byte(2);
 	write_string("#Game_will_restart_in_console");
 	write_string(sz_buffer);
@@ -156,7 +186,16 @@ send_messages(id, time)
 	message_end();
 }
 
+send_hud_message(id, hide)
+{
+	message_begin(id ? MSG_ONE : MSG_ALL, get_user_msgid("HideWeapon"), _, id);
+	write_byte(hide ? (1<<7) : (1<<5));
+	message_end();
+}
+
 get_free_task_id()
 {
 	for (new i = 0;; i++) if (!task_exists(i)) return i;
+	// to get rid of the warning by the compilers
+	return 0;
 }
