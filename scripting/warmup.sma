@@ -30,24 +30,29 @@ new gcv_warmup,
     gcv_warmup_time,
 		gcv_warmup_message,
 		gcv_warmup_knifeonly,
-		gcv_warmup_knifeonly_hud;
+		gcv_warmup_knifeonly_hud,
+		gcv_warmup_dm,
+		gcv_warmup_dm_time;
 
 public plugin_init()
 {
 	register_plugin("warmup", "0.3", "Andrius Bentkus");
 
-	gcv_warmup               = register_cvar("warmup",               "1" );
-	gcv_warmup_time          = register_cvar("warmup_time",          "40");
-	gcv_warmup_message       = register_cvar("warmup_message",       "1" );
-	gcv_warmup_knifeonly     = register_cvar("warmup_knifeonly",     "0" );
-	gcv_warmup_knifeonly_hud = register_cvar("warmup_knifeonly_hud", "1" );
+	gcv_warmup               = register_cvar("warmup",               "1"  );
+	gcv_warmup_time          = register_cvar("warmup_time",          "40" );
+	gcv_warmup_message       = register_cvar("warmup_message",       "1"  );
+	gcv_warmup_knifeonly     = register_cvar("warmup_knifeonly",     "0"  );
+	gcv_warmup_knifeonly_hud = register_cvar("warmup_knifeonly_hud", "0"  );
+	gcv_warmup_dm            = register_cvar("warmup_dm",            "0"  );
+	gcv_warmup_dm_time       = register_cvar("warmup_dm_time",       "0.2");
 
 	register_concmd("warmup_start", "cmd_warmup_start", ADMIN_IMMUNITY, "<warmup time in seconds, 0 for indefinite, blank = warmup_delay>");
 	register_concmd("warmup_end",   "cmd_warmup_end",   ADMIN_IMMUNITY);
 
-	RegisterHam(Ham_Spawn, "player", "forward_ham_player_spawn_post", 1);
 	register_event("TextMsg", "game_start_event", "a", "2&#Game_C");
 	register_message(get_user_msgid("StatusIcon"), "msg_status_icon");
+	RegisterHam(Ham_Spawn, "player", "forward_ham_player_spawn_post", 1);
+	RegisterHam(Ham_Killed, "player", "forward_ham_player_killed_pre", 0);
 }
 
 // commands
@@ -93,6 +98,19 @@ public game_start_event()
 	{
 		if (!warmup_is_enabled()) start_warmup(get_pcvar_num(gcv_warmup_time));
 	}
+}
+
+public forward_ham_player_killed_pre(victim)
+{
+	if (warmup_is_enabled() && get_pcvar_num(gcv_warmup_dm))
+	{
+		set_task(get_pcvar_float(gcv_warmup_dm_time), "respawn_player", victim);
+	}
+}
+
+public respawn_player(id)
+{
+	ExecuteHam(Ham_CS_RoundRespawn, id);
 }
 
 public forward_ham_player_spawn_post(id)
