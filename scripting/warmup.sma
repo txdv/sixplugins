@@ -115,7 +115,7 @@ public plugin_init()
 	gcv_warmup               = register_cvar("warmup",               "1"  );
 	gcv_warmup_time          = register_cvar("warmup_time",          "40" );
 	gcv_warmup_message       = register_cvar("warmup_message",       "1"  );
-	gcv_warmup_message_timer = register_cvar("warmup_message_timer", "1"  );
+	gcv_warmup_message_timer = register_cvar("warmup_message_timer", "0"  );
 	gcv_warmup_mode          = register_cvar("warmup_mode",          "0"  );
 	gcv_warmup_mode_hud      = register_cvar("warmup_mode_hud",      "0"  );
 	gcv_warmup_respawn       = register_cvar("warmup_respawn",       "0"  );
