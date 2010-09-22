@@ -102,8 +102,8 @@ new gcv_warmup,
 		gcv_warmup_message_timer,
 		gcv_warmup_mode,
 		gcv_warmup_mode_hud,
-		gcv_warmup_dm,
-		gcv_warmup_dm_time,
+		gcv_warmup_respawn,
+		gcv_warmup_respawn_delay,
 		gcv_warmup_armoury_invis,
 		gcv_warmup_weapons,
 		gcv_warmup_ammo;
@@ -118,8 +118,8 @@ public plugin_init()
 	gcv_warmup_message_timer = register_cvar("warmup_message_timer", "1"  );
 	gcv_warmup_mode          = register_cvar("warmup_mode",          "0"  );
 	gcv_warmup_mode_hud      = register_cvar("warmup_mode_hud",      "0"  );
-	gcv_warmup_dm            = register_cvar("warmup_dm",            "0"  );
-	gcv_warmup_dm_time       = register_cvar("warmup_dm_time",       "0.2");
+	gcv_warmup_respawn       = register_cvar("warmup_respawn",       "0"  );
+	gcv_warmup_respawn_delay = register_cvar("warmup_respawn_delay", "0.2");
 	gcv_warmup_armoury_invis = register_cvar("warmup_armoury_invis", "0"  );
 
 	// knife only: 000000000000000000000000000001000
@@ -231,9 +231,9 @@ public ammox_message(msgid, msgdest, id)
 
 public forward_ham_player_killed_pre(victim)
 {
-	if (warmup_get() && get_pcvar_num(gcv_warmup_dm))
+	if (warmup_get() && get_pcvar_num(gcv_warmup_respawn))
 	{
-		set_task(get_pcvar_float(gcv_warmup_dm_time), "respawn_player", victim);
+		set_task(get_pcvar_float(gcv_warmup_respawn_delay), "respawn_player", victim);
 	}
 }
 
