@@ -100,8 +100,8 @@ new gcv_warmup,
     gcv_warmup_time,
 		gcv_warmup_message,
 		gcv_warmup_message_timer,
-		gcv_warmup_knifeonly,
-		gcv_warmup_knifeonly_hud,
+		gcv_warmup_mode,
+		gcv_warmup_mode_hud,
 		gcv_warmup_dm,
 		gcv_warmup_dm_time,
 		gcv_warmup_armoury_invis,
@@ -116,8 +116,8 @@ public plugin_init()
 	gcv_warmup_time          = register_cvar("warmup_time",          "40" );
 	gcv_warmup_message       = register_cvar("warmup_message",       "1"  );
 	gcv_warmup_message_timer = register_cvar("warmup_message_timer", "1"  );
-	gcv_warmup_knifeonly     = register_cvar("warmup_knifeonly",     "0"  );
-	gcv_warmup_knifeonly_hud = register_cvar("warmup_knifeonly_hud", "0"  );
+	gcv_warmup_mode          = register_cvar("warmup_mode",          "0"  );
+	gcv_warmup_mode_hud      = register_cvar("warmup_mode_hud",      "0"  );
 	gcv_warmup_dm            = register_cvar("warmup_dm",            "0"  );
 	gcv_warmup_dm_time       = register_cvar("warmup_dm_time",       "0.2");
 	gcv_warmup_armoury_invis = register_cvar("warmup_armoury_invis", "0"  );
@@ -283,7 +283,7 @@ public start_warmup(time)
 	g_starttime = get_systime();
 	g_time = time;
 
-	warmup_buy_set(!get_pcvar_num(gcv_warmup_knifeonly));
+	warmup_buy_set(!get_pcvar_num(gcv_warmup_mode));
 	warmup_armoury_invis_set(get_pcvar_num(gcv_warmup_armoury_invis));
 
 	set_armoury_invisibility(warmup_armoury_invis_get());
@@ -360,7 +360,7 @@ handle_player(id)
 			}
 		}
 
-		if (!get_pcvar_num(gcv_warmup_knifeonly_hud)) send_hud_message(id, 0);
+		if (!get_pcvar_num(gcv_warmup_mode_hud)) send_hud_message(id, 0);
 	}
 
 	if (get_pcvar_num(gcv_warmup_message)) {
