@@ -105,8 +105,11 @@ new gcv_warmup,
 		gcv_warmup_respawn,
 		gcv_warmup_respawn_delay,
 		gcv_warmup_armoury_invis,
+		gcv_warmup_armoury_pick,
 		gcv_warmup_weapons,
-		gcv_warmup_ammo;
+		gcv_warmup_ammo,
+		gcv_warmup_weapon_drop,
+		gcv_warmup_weapon_pick;
 
 public plugin_init()
 {
@@ -121,6 +124,9 @@ public plugin_init()
 	gcv_warmup_respawn       = register_cvar("warmup_respawn",       "0"  );
 	gcv_warmup_respawn_delay = register_cvar("warmup_respawn_delay", "0.2");
 	gcv_warmup_armoury_invis = register_cvar("warmup_armoury_invis", "0"  );
+	gcv_warmup_armoury_pick  = register_cvar("warmup_armoury_pick",  "1"  );
+	gcv_warmup_weapon_drop   = register_cvar("warmup_weapon_drop",   "1"  );
+	gcv_warmup_weapon_pick   = register_cvar("warmup_weapon_pick",   "1"  );
 
 	// knife only: 000000000000000000000000000001000
 	// knife + ak: 000000000000000000000000000021000
@@ -130,6 +136,8 @@ public plugin_init()
 	register_concmd("warmup_start", "cmd_warmup_start", ADMIN_IMMUNITY, "<warmup time in seconds, 0 for indefinite, blank = warmup_delay>");
 	register_concmd("warmup_end",   "cmd_warmup_end",   ADMIN_IMMUNITY);
 
+	register_clcmd("drop", "client_command_drop");
+
 	register_event("TextMsg", "game_start_event", "a", "2&#Game_C");
 	register_event("HLTV", "new_round_event", "a", "1=0", "2=0");
 
@@ -137,6 +145,8 @@ public plugin_init()
 	register_message(get_user_msgid("CurWeapon"),  "current_weapon_message" );
 	register_message(get_user_msgid("AmmoX"),      "ammox_message"          );
 
+	RegisterHam(Ham_Touch, "weaponbox", "forwad_ham_touch_weaponbox_post", 1);
+	RegisterHam(Ham_Touch, "armoury_entity", "forward_ham_touch_armoury_post", 1);
 	RegisterHam(Ham_Spawn, "player", "forward_ham_player_spawn_post", 1);
 	RegisterHam(Ham_Killed, "player", "forward_ham_player_killed_pre", 0);
 }
@@ -174,6 +184,12 @@ public cmd_warmup_end(client, level, cid)
 	if (!cmd_access(client, level, cid, 0)) return PLUGIN_HANDLED;
 	end_warmup();
 	return PLUGIN_HANDLED;
+}
+
+public client_command_drop(id)
+{
+	if (warmup_get() && !get_pcvar_num(gcv_warmup_weapon_drop)) return PLUGIN_HANDLED;
+	return PLUGIN_CONTINUE;
 }
 
 // events, hooks, forwards
@@ -229,12 +245,26 @@ public ammox_message(msgid, msgdest, id)
 	return PLUGIN_CONTINUE;
 }
 
+
+public forwad_ham_touch_weaponbox_post(victim)
+{
+	if (warmup_get() && !get_pcvar_num(gcv_warmup_weapon_pick)) return PLUGIN_HANDLED;
+	return PLUGIN_CONTINUE;
+}
+
+public forward_ham_touch_armoury_post(victim)
+{
+	if (warmup_get() && !get_pcvar_num(gcv_warmup_armoury_pick)) return PLUGIN_HANDLED;
+	return PLUGIN_CONTINUE;
+}
+
 public forward_ham_player_killed_pre(victim)
 {
 	if (warmup_get() && get_pcvar_num(gcv_warmup_respawn))
 	{
 		set_task(get_pcvar_float(gcv_warmup_respawn_delay), "respawn_player", victim);
 	}
+	return PLUGIN_CONTINUE;
 }
 
 public respawn_player(id)
@@ -244,7 +274,8 @@ public respawn_player(id)
 
 public forward_ham_player_spawn_post(id)
 {
-  if (warmup_get() && is_user_alive(id) && !is_user_bot(id)) handle_player(id);
+	if (warmup_get() && is_user_alive(id) && !is_user_bot(id)) handle_player(id);
+	return PLUGIN_CONTINUE;
 }
 
 public msg_status_icon_message(msgid, msgdest, id)
