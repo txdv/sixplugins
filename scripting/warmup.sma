@@ -34,43 +34,59 @@ enum {
 	ammo_c4            //   1
 };
 
-static weapon_ammo_info[] = { 0, 30, 90, 200, 90, 32, 100, 100, 35, 52, 120, 2, 1, 1, 1 };
+static weapon_ammo_info[][] = {
+	{ 0, 0 },
+	{  30, "ammo_338mag"       },
+	{  90, "ammo_762mm"        },
+	{ 200, "ammo_556mm_box"    },
+	{  90, "ammo_556mm"        },
+	{  32, "ammo_buckshot"     },
+	{ 100, "ammo_45cp"         },
+	{ 100, "ammo_57mm"         },
+	{  35, "ammo_50e"          },
+	{  52, "ammo_357sig"       },
+	{ 120, "ammo_9mm"          },
+	{   2, "ammo_flashbang"    },
+	{   1, "ammo_hegrenade"    },
+	{   1, "ammo_smokegrenade" },
+	{   1, "ammo_c4"           }
+};
 
 static weapon_info[][] =
 {
-	{   0, 0,              0                     }, //  0
-	{  13, ammo_357sig,    "weapon_p228"         }, //  1
-	{   0, 0,              0                     }, //  2
-	{  10, ammo_762mm,     "weapon_scout"        }, //  3
-	{   0, ammo_hegrenade, "weapon_hegrenade"    }, //  4
-	{   7, ammo_762mm,     "weapon_xm1014"       }, //  5
-	{   0, 0,              "weapon_c4"           }, //  6 - c4
-	{  30, ammo_45cp,      "weapon_mac10"        }, //  7
-	{  30, ammo_556mm,     "weapon_aug"          }, //  8
-	{   0, 0,              "weapon_smokegrenade" }, //  9 - smoke
-	{  15, ammo_9mm,       "weapon_elite"        }, // 10
-	{  20, ammo_57mm,      "weapon_fiveseven"    }, // 11
-	{  25, ammo_45cp,      "weapon_ump45"        }, // 12
-	{  30, ammo_556mm,     "weapon_sg550"        }, // 13
-	{  35, ammo_556mm,     "weapon_galil"        }, // 14
-	{  25, ammo_556mm,     "weapon_famas"        }, // 15
-	{  12, ammo_45cp,      "weapon_usp"          }, // 16
-	{  20, ammo_9mm,       "weapon_glock18"      }, // 17
-	{  10, ammo_338mag,    "weapon_awp"          }, // 18
-	{  30, ammo_9mm,       "weapon_mp5navy"      }, // 19
-	{ 100, ammo_556mm_box, "weapon_m249"         }, // 20
-	{   8, ammo_buckshot,  "weapon_m3"           }, // 21
-	{  30, ammo_556mm,     "weapon_m4a1"         }, // 22
-	{  30, ammo_9mm,       "weapon_tmp"          }, // 23
-	{  20, ammo_762mm,     "weapon_g3sg1"        }, // 24
-	{   0, 0,              "weapon_flashbang"    }, // 25 - flashbang
-	{   7, ammo_50e,       "weapon_deagle"       }, // 26
-	{  30, ammo_556mm,     "weapon_sg552"        }, // 27
-	{  30, ammo_762mm,     "weapon_ak47"         }, // 28
-	{   0, 0,              "weapon_knife"        }, // 29
-	{  50, ammo_57mm,      "weapon_p90"          }, // 30
-	{   0, 0,              0,                    }, // 31 - vest
-	{   0, 0,              0,                    }  // 32 - vesthelm
+	{   0, 0,                 0                     }, //  0
+	{  13, ammo_357sig,       "weapon_p228"         }, //  1
+	{   0, 0,                 0                     }, //  2
+	{  10, ammo_762mm,        "weapon_scout"        }, //  3
+	{   0, ammo_hegrenade,    "weapon_hegrenade"    }, //  4
+	{   7, ammo_762mm,        "weapon_xm1014"       }, //  5
+	{   0, ammo_c4,           "weapon_c4"           }, //  6 - c4
+	{  30, ammo_45cp,         "weapon_mac10"        }, //  7
+	{  30, ammo_556mm,        "weapon_aug"          }, //  8
+	{   0, ammo_smokegrenade, "weapon_smokegrenade" }, //  9 - smoke
+	{  15, ammo_9mm,          "weapon_elite"        }, // 10
+	{  20, ammo_57mm,         "weapon_fiveseven"    }, // 11
+	{  25, ammo_45cp,         "weapon_ump45"        }, // 12
+	{  30, ammo_556mm,        "weapon_sg550"        }, // 13
+	{  35, ammo_556mm,        "weapon_galil"        }, // 14
+	{  25, ammo_556mm,        "weapon_famas"        }, // 15
+	{  12, ammo_45cp,         "weapon_usp"          }, // 16
+	{  20, ammo_9mm,          "weapon_glock18"      }, // 17
+	{  10, ammo_338mag,       "weapon_awp"          }, // 18
+	{  30, ammo_9mm,          "weapon_mp5navy"      }, // 19
+	{ 100, ammo_556mm_box,    "weapon_m249"         }, // 20
+	{   8, ammo_buckshot,     "weapon_m3"           }, // 21
+	{  30, ammo_556mm,        "weapon_m4a1"         }, // 22
+	{  30, ammo_9mm,          "weapon_tmp"          }, // 23
+	{  20, ammo_762mm,        "weapon_g3sg1"        }, // 24
+	{   0, ammo_flashbang,    "weapon_flashbang"    }, // 25 - flashbang
+	{   7, ammo_50e,          "weapon_deagle"       }, // 26
+	{  30, ammo_556mm,        "weapon_sg552"        }, // 27
+	{  30, ammo_762mm,        "weapon_ak47"         }, // 28
+	{   0, 0,                 "weapon_knife"        }, // 29
+	{  50, ammo_57mm,         "weapon_p90"          }, // 30
+	{   0, 0,                 0,                    }, // 31 - vest
+	{   0, 0,                 0,                    }  // 32 - vesthelm
 };
 
 const WPN_GRENADES = (1 << CSW_HEGRENADE) | (1 << CSW_SMOKEGRENADE) | (1 << CSW_FLASHBANG);
@@ -255,8 +271,8 @@ public ammox_message(msgid, msgdest, id)
 	new ammo_id = get_msg_arg_int(1);
 	new ammount = get_msg_arg_int(2);
 	if (!g_ammo_settings[ammo_id]) return PLUGIN_CONTINUE;
-	if (ammount < weapon_ammo_info[ammo_id]) {
-		set_pdata_int(id, m_rgpPlayerItems_0 + ammo_id, weapon_ammo_info[ammo_id], 5);
+	if (ammount < weapon_ammo_info[ammo_id][0]) {
+		set_pdata_int(id, m_rgpPlayerItems_0 + ammo_id, weapon_ammo_info[ammo_id][0], 5);
 		return PLUGIN_HANDLED;
 	}
 	return PLUGIN_CONTINUE;
@@ -379,6 +395,13 @@ load_weapon_settings()
 	new sz_buffer[512]; // = "ak47 usp! knife";
 	new sz_pre[32], sz_rest[512];
 
+	get_pcvar_string(gcv_warmup_ammo, sz_buffer, sizeof(gcv_warmup_ammo));
+	for (new i =0; i < strlen(sz_buffer); i++)
+		g_ammo_settings[i] = (sz_buffer[i] - '0') % 2;
+
+	for (new i = strlen(sz_buffer); i < 16; i++) g_ammo_settings[i] = 0;
+
+
 	get_pcvar_string(gcv_warmup_weapons, sz_buffer, sizeof(sz_buffer) -1);
 
 	// if string is a 012 configuration
@@ -387,6 +410,9 @@ load_weapon_settings()
 			g_weapon_settings[i] = (sz_buffer[i] - '0') % 3;
 
 	} else { // if not, assume that it is keyword config
+		// reset first old settings
+		for (new i = 0; i < sizeof(g_weapon_settings); i++) g_weapon_settings[i] = 0;
+
 		while (true)
 		{
 			if (!strlen(sz_buffer)) break;
@@ -407,25 +433,27 @@ load_weapon_settings()
 			}
 
 			new weapon_id;
-			if ((weapon_id = weapon_get(sz_pre)) != -1)
+			if ((weapon_id = weapon_index(sz_pre)) != -1)
 			{
-				g_weapon_settings[weapon_id] = setting;
+				if (weapon_is_grenade(weapon_id) > 0) {
+					g_weapon_settings[weapon_id] = 1;
+					if (setting == 2) {
+						server_print("%d\n", weapon_id);
+						g_ammo_settings[weapon_info[weapon_id][1]] = 1;
+					}
+				} else {
+					g_weapon_settings[weapon_id] = setting;
+				}
+			} else if ((weapon_id = weapon_ammo_index(sz_pre)) != -1) {
+				g_ammo_settings[weapon_id] = 1;
 			}
 		}
 	}
-
-
-	get_pcvar_string(gcv_warmup_ammo, sz_buffer, 16);
-	for (new i =0; i < strlen(sz_buffer); i++)
-		g_ammo_settings[i] = (sz_buffer[i] - '0') % 2;
-
-	for (new i = strlen(sz_buffer); i < 16; i++) g_ammo_settings[i] = 0;
 }
 
 handle_player(id)
 {
 	if (!warmup_buy_get()) {
-
 		strip_user_weapons(id);
 		set_pdata_int(id, 116, 0);
 
@@ -439,9 +467,10 @@ handle_player(id)
 				default: {
 					if (g_weapon_settings[i])
 					{
+						server_print("%s", weapon_info[i][2]);
 						give_item(id, weapon_info[i][2]);
 						if (weapon_has_clip(i))
-						cs_set_user_bpammo(id, i, weapon_ammo_info[weapon_info[i][1]]);
+						cs_set_user_bpammo(id, i, weapon_ammo_info[weapon_info[i][1]][0]);
 					}
 				}
 
@@ -511,8 +540,9 @@ get_free_task_id()
 
 // string functions
 
-str_ends_with(string[], postfix[])
+stock str_ends_with(string[], postfix[])
 {
+	// own implementation
 	new string_len = strlen(string);
 	new postfix_len = strlen(postfix);
 	if (string_len < postfix_len) return false;
@@ -520,12 +550,19 @@ str_ends_with(string[], postfix[])
 	{
 		new string_char = string[i];
 		new postfix_char = postfix[i-string_len+postfix_len];
-		//server_print("%c %c\n", string_char, postfix_char);
 		if (string_char != postfix_char) return false;
 	}
 	return true;
 
-	//return strfind(string, postfix, ignorecase, string_len - postfix_len + 1) != -1;
+	// this is an epic fail of amxmodx, check the source code for strfind
+	//return strfind(string, postfix, ignorecase, string_len - postfix_len + 1) ==  != -1;
+}
+
+stock str_begins_with(string[], prefix[])
+{
+	new string_len = strlen(string);
+	new prefix_len = strlen(prefix);
+	return strfind(string, postfix, ignorecase) == 0;
 }
 
 str_valid_chars(string[], chars[])
@@ -543,11 +580,19 @@ str_valid_chars(string[], chars[])
 
 // weapon functions
 
-weapon_get(postfix[])
+stock weapon_index(postfix[])
 {
 	for (new i = 0; i < sizeof(weapon_info); i++)
 	{
 		if (str_ends_with(weapon_info[i][2], postfix)) return i;
+	}
+	return -1;
+}
+stock weapon_ammo_index(postfix[])
+{
+	for (new i = 0; i < sizeof(weapon_ammo_info); i++)
+	{
+		if (str_ends_with(weapon_ammo_info[i][1], postfix)) return i;
 	}
 	return -1;
 }
