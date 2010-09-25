@@ -73,8 +73,10 @@ static weapon_info[][] =
 	{   0, 0,              0,                    }  // 32 - vesthelm
 };
 
-const NOCLIP_WEAPONS = (1 << CSW_HEGRENADE) | (1 << CSW_SMOKEGRENADE) | (1 << CSW_FLASHBANG) | (1 << CSW_KNIFE ) | (1 << CSW_C4);
-weapon_has_clip(weapon_id) { return !(NOCLIP_WEAPONS & (1 << weapon_id)); }
+const WPN_GRENADES = (1 << CSW_HEGRENADE) | (1 << CSW_SMOKEGRENADE) | (1 << CSW_FLASHBANG);
+const WPN_NOCLIP =  WPN_GRENADES | (1 << CSW_KNIFE ) | (1 << CSW_C4);
+weapon_has_clip(weapon_id) { return !(WPN_NOCLIP & (1 << weapon_id)); }
+weapon_is_grenade(weapon_id) { return WPN_GRENADES & (1 << weapon_id); }
 
 new g_enabled = 0,
     g_starttime,
@@ -233,6 +235,8 @@ public current_weapon_message(msgid, msgdest, id)
 	if (!warmup_get()) return PLUGIN_CONTINUE;
 	new active = get_msg_arg_int(1);
 	new weapon_id = get_msg_arg_int(2);
+	// it returns 255 when you die
+	if (weapon_id == 255) return PLUGIN_CONTINUE;
 	if (g_weapon_settings[weapon_id] < 2) return PLUGIN_CONTINUE;
 	new clip_ammo = get_msg_arg_int(3);
 
