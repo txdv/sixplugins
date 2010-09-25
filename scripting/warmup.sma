@@ -89,6 +89,17 @@ static weapon_info[][] =
 	{   0, 0,                 0,                    }  // 32 - vesthelm
 };
 
+static weapon_shortcuts[][] =
+{
+	{ CSW_HEGRENADE,    "he"    },
+	{ CSW_SMOKEGRENADE, "sg"    },
+	{ CSW_FLASHBANG,    "fb"    },
+	{ CSW_AK47,         "ak"    },
+	{ CSW_GLOCK18,      "glock" },
+	{ CSW_MP5NAVY,      "mp5"   },
+	{ CSW_MAC10,        "mac"   }
+};
+
 const WPN_GRENADES = (1 << CSW_HEGRENADE) | (1 << CSW_SMOKEGRENADE) | (1 << CSW_FLASHBANG);
 const WPN_NOCLIP =  WPN_GRENADES | (1 << CSW_KNIFE ) | (1 << CSW_C4);
 weapon_has_clip(weapon_id) { return !(WPN_NOCLIP & (1 << weapon_id)); }
@@ -587,6 +598,10 @@ stock weapon_index(postfix[])
 	for (new i = 0; i < sizeof(weapon_info); i++)
 	{
 		if (str_ends_with(weapon_info[i][2], postfix)) return i;
+	}
+	for (new i = 0; i < sizeof(weapon_shortcuts); i++)
+	{
+		if (equal(weapon_shortcuts[i][1], postfix)) return weapon_shortcuts[i][0];
 	}
 	return -1;
 }
