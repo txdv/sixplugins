@@ -5,6 +5,8 @@
 #include <fun>
 #include <cstrike>
 
+#define DEBUG
+
 #pragma semicolon 1
 #pragma ctrlchar '\'
 
@@ -14,9 +16,6 @@
 
 #define m_pActiveItem 373
 #define m_rgpPlayerItems_0 376
-
-
-const NOCLIP_WEAPONS = (1 << CSW_HEGRENADE) | (1 << CSW_SMOKEGRENADE) | (1 << CSW_FLASHBANG) | (1 << CSW_KNIFE ) | (1 << CSW_C4);
 
 enum {
 	ammo_338mag   = 1, //  30
@@ -74,13 +73,16 @@ static weapon_info[][] =
 	{   0, 0,              0,                    }  // 32 - vesthelm
 };
 
+const NOCLIP_WEAPONS = (1 << CSW_HEGRENADE) | (1 << CSW_SMOKEGRENADE) | (1 << CSW_FLASHBANG) | (1 << CSW_KNIFE ) | (1 << CSW_C4);
+weapon_has_clip(weapon_id) { return !(NOCLIP_WEAPONS & (1 << weapon_id)); }
+
 new g_enabled = 0,
     g_starttime,
 		g_taskid,
 		g_time,
 		g_buy = 1,
 		g_armoury_invisibility = 0,
-		g_weapon_settings[32],
+		g_weapon_settings[31],
 		g_ammo_settings[16];
 
 // Setters and getters for some variables
@@ -128,13 +130,16 @@ public plugin_init()
 	gcv_warmup_weapon_drop   = register_cvar("warmup_weapon_drop",   "1"  );
 	gcv_warmup_weapon_pick   = register_cvar("warmup_weapon_pick",   "1"  );
 
-	// knife only: 000000000000000000000000000001000
-	// knife + ak: 000000000000000000000000000021000
-	gcv_warmup_weapons = register_cvar("warmup_weapons", "000000000000000000000000000001000");
+	//          knife only: 0000000000000000000000000000010, knife
+	// knife + infinite ak: 0000000000000000000000000000210, ak47! knife
+	gcv_warmup_weapons = register_cvar("warmup_weapons", "knife");
 	gcv_warmup_ammo = register_cvar("warmup_ammo", "000000000000000");
 
 	register_concmd("warmup_start", "cmd_warmup_start", ADMIN_IMMUNITY, "<warmup time in seconds, 0 for indefinite, blank = warmup_delay>");
 	register_concmd("warmup_end",   "cmd_warmup_end",   ADMIN_IMMUNITY);
+	#if defined DEBUG
+	register_concmd("warmup_test",  "cmd_warmup_test",  ADMIN_IMMUNITY);
+	#endif
 
 	register_clcmd("drop", "client_command_drop");
 
@@ -186,6 +191,14 @@ public cmd_warmup_end(client, level, cid)
 	return PLUGIN_HANDLED;
 }
 
+#if defined DEBUG
+public cmd_warmup_test(client, level, cid)
+{
+	if (!cmd_access(client, level, cid, 0)) return PLUGIN_HANDLED;
+	return PLUGIN_HANDLED;
+}
+#endif
+
 public client_command_drop(id)
 {
 	if (warmup_get() && !get_pcvar_num(gcv_warmup_weapon_drop)) return PLUGIN_HANDLED;
@@ -224,7 +237,7 @@ public current_weapon_message(msgid, msgdest, id)
 	new clip_ammo = get_msg_arg_int(3);
 
 	new max_clip_ammo = weapon_info[weapon_id][0];
-	if (active && !(NOCLIP_WEAPONS & (1 << weapon_id)) && (clip_ammo != max_clip_ammo))
+	if (active && weapon_has_clip(weapon_id) && (clip_ammo != max_clip_ammo))
 	{
 		fm_cs_set_weapon_ammo(get_pdata_cbase(id, m_pActiveItem) , weapon_info[weapon_id][0]);
 		return PLUGIN_HANDLED;
@@ -359,21 +372,50 @@ public end_warmup()
 
 load_weapon_settings()
 {
-	new sz_weapons[33];
-	get_pcvar_string(gcv_warmup_weapons, sz_weapons, sizeof(sz_weapons) -1);
+	new sz_buffer[512]; // = "ak47 usp! knife";
+	new sz_pre[32], sz_rest[512];
 
-	// get the weapon settings
-	for (new i = 0; i < strlen(sz_weapons); i++)
-		g_weapon_settings[i] = (sz_weapons[i] - '0') % 3;
+	get_pcvar_string(gcv_warmup_weapons, sz_buffer, sizeof(sz_buffer) -1);
 
-	// fill rest with 0
-	for (new i = strlen(sz_weapons); i < 32; i++) g_weapon_settings[i] = 0;
+	// if string is a 012 configuration
+	if ((strlen(sz_buffer) == sizeof(g_weapon_settings)) && (str_valid_chars(sz_buffer, "012")))  {
+		for (new i = 0; i < strlen(sz_buffer); i++)
+			g_weapon_settings[i] = (sz_buffer[i] - '0') % 3;
 
-	get_pcvar_string(gcv_warmup_ammo, sz_weapons, 16);
-	for (new i =0; i < strlen(sz_weapons); i++)
-		g_ammo_settings[i] = (sz_weapons[i] - '0') % 2;
+	} else { // if not, assume that it is keyword config
+		while (true)
+		{
+			if (!strlen(sz_buffer)) break;
+			strtok(sz_buffer, sz_pre, sizeof(sz_pre) -1, sz_rest, sizeof(sz_rest) -1, ' ', 0);
+			copy(sz_buffer, sizeof(sz_rest), sz_rest);
 
-	for (new i = strlen(sz_weapons); i < 16; i++) g_ammo_settings[i] = 0;
+			new setting = 1; // if it is mentioned, spawn it
+			if (str_ends_with(sz_pre, "!"))
+			{
+				setting = 2; // if it has ! postfix, unlimited clip!
+				sz_pre[strlen(sz_pre)-1] = 0;
+			}
+
+			if (equal(sz_pre, "kevlar")) {
+				g_weapon_settings[0] = 1;
+			} else if (equal(sz_pre, "vesthelm")) {
+				g_weapon_settings[0] = 2;
+			}
+
+			new weapon_id;
+			if ((weapon_id = weapon_get(sz_pre)) != -1)
+			{
+				g_weapon_settings[weapon_id] = setting;
+			}
+		}
+	}
+
+
+	get_pcvar_string(gcv_warmup_ammo, sz_buffer, 16);
+	for (new i =0; i < strlen(sz_buffer); i++)
+		g_ammo_settings[i] = (sz_buffer[i] - '0') % 2;
+
+	for (new i = strlen(sz_buffer); i < 16; i++) g_ammo_settings[i] = 0;
 }
 
 handle_player(id)
@@ -384,10 +426,21 @@ handle_player(id)
 		set_pdata_int(id, 116, 0);
 
 		for (new i = 0; i < sizeof(g_weapon_settings); i++) {
-			if (g_weapon_settings[i]) {
-				give_item(id, weapon_info[i][2]);
-				new ammo_id = weapon_info[i][1];
-				cs_set_user_bpammo(id, i, weapon_ammo_info[ammo_id]);
+			switch (i)
+			{
+				case 0: {
+					cs_set_user_armor(id, 100, (g_weapon_settings[i] == 1 ? CS_ARMOR_KEVLAR : CS_ARMOR_VESTHELM ));
+				}
+				case 2: { }
+				default: {
+					if (g_weapon_settings[i])
+					{
+						give_item(id, weapon_info[i][2]);
+						if (weapon_has_clip(i))
+						cs_set_user_bpammo(id, i, weapon_ammo_info[weapon_info[i][1]]);
+					}
+				}
+
 			}
 		}
 
@@ -450,4 +503,47 @@ get_free_task_id()
 	for (new i = 1;; i++) if (!task_exists(i)) return i;
 	// to get rid of the warning by the compilers
 	return 1;
+}
+
+// string functions
+
+str_ends_with(string[], postfix[])
+{
+	new string_len = strlen(string);
+	new postfix_len = strlen(postfix);
+	if (string_len < postfix_len) return false;
+	for (new i = string_len - postfix_len; i < string_len; i++)
+	{
+		new string_char = string[i];
+		new postfix_char = postfix[i-string_len+postfix_len];
+		//server_print("%c %c\n", string_char, postfix_char);
+		if (string_char != postfix_char) return false;
+	}
+	return true;
+
+	//return strfind(string, postfix, ignorecase, string_len - postfix_len + 1) != -1;
+}
+
+str_valid_chars(string[], chars[])
+{
+	new string_len = strlen(string), chars_len = strlen(chars);
+	for (new i = 0; i < string_len; i++) {
+		new found = false;
+		for (new j = 0; j < chars_len; j++) {
+			if (string[i] == chars[j]) found = true;
+		}
+		if (!found) return false;
+	}
+	return true;
+}
+
+// weapon functions
+
+weapon_get(postfix[])
+{
+	for (new i = 0; i < sizeof(weapon_info); i++)
+	{
+		if (str_ends_with(weapon_info[i][2], postfix)) return i;
+	}
+	return -1;
 }
