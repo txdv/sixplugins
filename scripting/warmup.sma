@@ -419,10 +419,12 @@ load_weapon_settings()
 			strtok(sz_buffer, sz_pre, sizeof(sz_pre) -1, sz_rest, sizeof(sz_rest) -1, ' ', 0);
 			copy(sz_buffer, sizeof(sz_rest), sz_rest);
 
-			new setting = 1; // if it is mentioned, spawn it
-			if (str_ends_with(sz_pre, "!"))
-			{
-				setting = 2; // if it has ! postfix, unlimited clip!
+			new ammo = 0, clip = 0;
+			if (str_ends_with(sz_pre, "!")) { // ! for uclip
+				clip = 1;
+				sz_pre[strlen(sz_pre)-1] = 0;
+			} else if (str_ends_with(sz_pre, "?")) { // ? for uammo
+				ammo = 1;
 				sz_pre[strlen(sz_pre)-1] = 0;
 			}
 
@@ -437,12 +439,13 @@ load_weapon_settings()
 			{
 				if (weapon_is_grenade(weapon_id) > 0) {
 					g_weapon_settings[weapon_id] = 1;
-					if (setting == 2) {
+					if (clip || ammo) {
 						server_print("%d\n", weapon_id);
 						g_ammo_settings[weapon_info[weapon_id][1]] = 1;
 					}
 				} else {
-					g_weapon_settings[weapon_id] = setting;
+					g_weapon_settings[weapon_id] = (clip ? 2 : 1 );
+					g_ammo_settings[weapon_info[weapon_id][1]] = (ammo ? 1 : 0);
 				}
 			} else if ((weapon_id = weapon_ammo_index(sz_pre)) != -1) {
 				g_ammo_settings[weapon_id] = 1;
@@ -467,7 +470,6 @@ handle_player(id)
 				default: {
 					if (g_weapon_settings[i])
 					{
-						server_print("%s", weapon_info[i][2]);
 						give_item(id, weapon_info[i][2]);
 						if (weapon_has_clip(i))
 						cs_set_user_bpammo(id, i, weapon_ammo_info[weapon_info[i][1]][0]);
