@@ -39,39 +39,39 @@ static weapon_ammo_info[] = { 0, 30, 90, 200, 90, 32, 100, 100, 35, 52, 120, 2, 
 
 static weapon_info[][] =
 {
-	{   0, 0,              0                  }, //  0
-	{  13, ammo_357sig,    "weapon_p228"      }, //  1
-	{   0, 0,              0                  }, //  2
-	{  10, ammo_762mm,     "weapon_scout"     }, //  3
-	{   0, ammo_hegrenade, "weapon_hegrenade" }, //  4
-	{   7, ammo_762mm,     "weapon_xm1014"    }, //  5
-	{   0, 0,              0                  }, //  6 - c4
-	{  30, ammo_45cp,      "weapon_mac10"     }, //  7
-	{  30, ammo_556mm,     "weapon_aug"       }, //  8
-	{   0, 0,              0                  }, //  9 - smoke
-	{  15, ammo_9mm,       "weapon_elite"     }, // 10
-	{  20, ammo_57mm,      "weapon_fiveseven" }, // 11
-	{  25, ammo_45cp,      "weapon_ump45"     }, // 12
-	{  30, ammo_556mm,     "weapon_sg550"     }, // 13
-	{  35, ammo_556mm,     "weapon_galil"     }, // 14
-	{  25, ammo_556mm,     "weapon_famas"     }, // 15
-	{  12, ammo_45cp,      "weapon_usp"       }, // 16
-	{  20, ammo_9mm,       "weapon_glock18"   }, // 17
-	{  10, ammo_338mag,    "weapon_awp"       }, // 18
-	{  30, ammo_9mm,       "weapon_mp5navy"   }, // 19
-	{ 100, ammo_556mm_box, "weapon_m249"      }, // 20
-	{   8, ammo_buckshot,  "weapon_m3"        }, // 21
-	{  30, ammo_556mm,     "weapon_m4a1"      }, // 22
-	{  30, ammo_9mm,       "weapon_tmp"       }, // 23
-	{  20, ammo_762mm,     "weapon_g3sg1"     }, // 24
-	{   0, 0,              0,                 }, // 25 - flashbang
-	{   7, ammo_50e,       "weapon_deagle"    }, // 26
-	{  30, ammo_556mm,     "weapon_sg552"     }, // 27
-	{  30, ammo_762mm,     "weapon_ak47"      }, // 28
-	{   0, 0,              "weapon_knife"     }, // 29
-	{  50, ammo_57mm,      "weapon_p90"       }, // 30
-	{   0, 0,              0,                 }, // 31 - vest
-	{   0, 0,              0,                 }  // 32 - vesthelm
+	{   0, 0,              0                     }, //  0
+	{  13, ammo_357sig,    "weapon_p228"         }, //  1
+	{   0, 0,              0                     }, //  2
+	{  10, ammo_762mm,     "weapon_scout"        }, //  3
+	{   0, ammo_hegrenade, "weapon_hegrenade"    }, //  4
+	{   7, ammo_762mm,     "weapon_xm1014"       }, //  5
+	{   0, 0,              "weapon_c4"           }, //  6 - c4
+	{  30, ammo_45cp,      "weapon_mac10"        }, //  7
+	{  30, ammo_556mm,     "weapon_aug"          }, //  8
+	{   0, 0,              "weapon_smokegrenade" }, //  9 - smoke
+	{  15, ammo_9mm,       "weapon_elite"        }, // 10
+	{  20, ammo_57mm,      "weapon_fiveseven"    }, // 11
+	{  25, ammo_45cp,      "weapon_ump45"        }, // 12
+	{  30, ammo_556mm,     "weapon_sg550"        }, // 13
+	{  35, ammo_556mm,     "weapon_galil"        }, // 14
+	{  25, ammo_556mm,     "weapon_famas"        }, // 15
+	{  12, ammo_45cp,      "weapon_usp"          }, // 16
+	{  20, ammo_9mm,       "weapon_glock18"      }, // 17
+	{  10, ammo_338mag,    "weapon_awp"          }, // 18
+	{  30, ammo_9mm,       "weapon_mp5navy"      }, // 19
+	{ 100, ammo_556mm_box, "weapon_m249"         }, // 20
+	{   8, ammo_buckshot,  "weapon_m3"           }, // 21
+	{  30, ammo_556mm,     "weapon_m4a1"         }, // 22
+	{  30, ammo_9mm,       "weapon_tmp"          }, // 23
+	{  20, ammo_762mm,     "weapon_g3sg1"        }, // 24
+	{   0, 0,              "weapon_flashbang"    }, // 25 - flashbang
+	{   7, ammo_50e,       "weapon_deagle"       }, // 26
+	{  30, ammo_556mm,     "weapon_sg552"        }, // 27
+	{  30, ammo_762mm,     "weapon_ak47"         }, // 28
+	{   0, 0,              "weapon_knife"        }, // 29
+	{  50, ammo_57mm,      "weapon_p90"          }, // 30
+	{   0, 0,              0,                    }, // 31 - vest
+	{   0, 0,              0,                    }  // 32 - vesthelm
 };
 
 new g_enabled = 0,
