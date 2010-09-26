@@ -91,13 +91,27 @@ static weapon_info[][] =
 
 static weapon_shortcuts[][] =
 {
-	{ CSW_HEGRENADE,    "he"    },
-	{ CSW_SMOKEGRENADE, "sg"    },
-	{ CSW_FLASHBANG,    "fb"    },
-	{ CSW_AK47,         "ak"    },
-	{ CSW_GLOCK18,      "glock" },
-	{ CSW_MP5NAVY,      "mp5"   },
-	{ CSW_MAC10,        "mac"   }
+	{ CSW_HEGRENADE,    "he"          },
+	{ CSW_HEGRENADE,    "hegren"      },
+	{ CSW_SMOKEGRENADE, "sg"          },
+	{ CSW_SMOKEGRENADE, "sggren"      },
+	{ CSW_FLASHBANG,    "fb"          },
+	{ CSW_FLASHBANG,    "fbgren"      },
+	{ CSW_AK47,         "ak"          },
+	{ CSW_GLOCK18,      "glock"       },
+	{ CSW_MP5NAVY,      "mp5"         },
+	{ CSW_MP5NAVY,      "mp"          },
+	{ CSW_MAC10,        "mac"         },
+	{ CSW_P228,         "compact"     },
+	{ CSW_XM1014,       "autoshotgun" },
+	{ CSW_AUG,          "bullpup"     },
+	{ CSW_UMP45,        "sm"          },
+	{ CSW_SG550,        "krieg550"    },
+	{ CSW_SG552,        "krieg552"    },
+	{ CSW_GALIL,        "defender"    },
+	{ CSW_FAMAS,        "clarion"     },
+	{ CSW_AWP,          "magnumn"     },
+	{ CSW_DEAGLE,       "nighthawk"   }
 };
 
 const WPN_GRENADES = (1 << CSW_HEGRENADE) | (1 << CSW_SMOKEGRENADE) | (1 << CSW_FLASHBANG);
