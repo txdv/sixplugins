@@ -294,6 +294,7 @@ public ammox_message(msgid, msgdest, id)
 {
 	if (!warmup_get()) return PLUGIN_CONTINUE;
 	new ammo_id = get_msg_arg_int(1);
+	if (ammo_id == 255) return PLUGIN_CONTINUE;
 	new ammount = get_msg_arg_int(2);
 	if (!g_ammo_settings[ammo_id]) return PLUGIN_CONTINUE;
 	if (ammount < weapon_ammo_info[ammo_id][0]) {
