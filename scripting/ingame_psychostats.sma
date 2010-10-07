@@ -331,12 +331,12 @@ enum COMMANDS
 
 new const g_szCommands[ COMMANDS ][ ] =
 {
-	"/skill",
-	"/skillme",
-	"/skilltop",
-	"/skill15",
-	"/skillstats",
-	"/skillmenu",
+	"/rank",
+	"/me",
+	"/top",
+	"/top15",
+	"/rankstats",
+	"/rankmenu",
 	"",
 	"/whois"
 };
