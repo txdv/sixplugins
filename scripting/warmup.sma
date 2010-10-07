@@ -126,7 +126,7 @@ new g_enabled = 0,
 		g_buy = 1,
 		g_armoury_invisibility = 0,
 		g_weapon_settings[31],
-		g_ammo_settings[16];
+		g_ammo_settings[sizeof(weapon_ammo_info)];
 
 // Setters and getters for some variables
 
@@ -294,7 +294,7 @@ public ammox_message(msgid, msgdest, id)
 {
 	if (!warmup_get()) return PLUGIN_CONTINUE;
 	new ammo_id = get_msg_arg_int(1);
-	if (ammo_id == 255) return PLUGIN_CONTINUE;
+	if (ammo_id >= sizeof(g_ammo_settings)) return PLUGIN_CONTINUE;
 	new ammount = get_msg_arg_int(2);
 	if (!g_ammo_settings[ammo_id]) return PLUGIN_CONTINUE;
 	if (ammount < weapon_ammo_info[ammo_id][0]) {
