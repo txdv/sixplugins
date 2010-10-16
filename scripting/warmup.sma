@@ -425,7 +425,7 @@ load_weapon_settings()
 	for (new i =0; i < strlen(sz_buffer); i++)
 		g_ammo_settings[i] = (sz_buffer[i] - '0') % 2;
 
-	for (new i = strlen(sz_buffer); i < 16; i++) g_ammo_settings[i] = 0;
+	for (new i = strlen(sz_buffer); i < sizeof(g_ammo_settings); i++) g_ammo_settings[i] = 0;
 
 
 	get_pcvar_string(gcv_warmup_weapons, sz_buffer, sizeof(sz_buffer) -1);
