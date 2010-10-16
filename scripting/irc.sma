@@ -807,14 +807,15 @@ public channel_commands(name[],command[])
 	{
 		format(temp,1024,"NOTICE %s :Begin Players List^r^n",name)
 		additem(temp)
-		new authid[35],uname[32],ip[51]
+		new authid[35],uname[32],ip[51],ping,loss
 		for(new anum=0;anum<34;anum++)
 		{
 			if(!is_user_connected(anum)) continue
 			get_user_authid(anum,authid,34)
 			get_user_name(anum,uname,31)
 			get_user_ip(anum,ip,50)
-			format(temp,1024,"NOTICE %s :#%d    %s    %s    %s^r^n",name,anum,authid,uname,ip)
+			get_user_ping(anum,ping,loss)
+			format(temp,1024,"NOTICE %s :#%d    %s    %s    %s    %d    %d^r^n",name,anum,authid,uname,ip,ping,loss)
 			additem(temp)				
 		}	
 		format(temp,1024,"NOTICE %s :End Players List^r^n",name)
