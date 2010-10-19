@@ -45,6 +45,88 @@ new curuser = 0
 new accessfile[201]
 new loginfile[201]
 
+// helper functions
+
+strcpy(dest[], source[])
+{
+	new length = strlen(source);
+	copy(dest, length, source);
+	dest[length] = 0;
+}
+
+// irc functions
+
+static irc_help_commands_header[] =
+{
+	"%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus ^r^n",
+	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):^r^n",
+	"%s %s :cmds / commands / help / info - Display this help.^r^n"
+}
+
+static irc_help_commands[] =
+{
+	"%s %s :%splayers - List the users currently on the server.^r^n",
+	"%s %s :%slogin <username> <password> - Log into HLDS<->IRC as an admin.  This may only be PMed to this bot.^r^n",
+	"%s %s :%slogout - Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC. This may only be PMed to this bot.^r^n",
+	"%s %s :%smap - Display the currently played map.^r^n",
+	"%s %s :%snextmap - Display the next map in the map cycle.^r^n",
+	"%s %s :%stimeleft - Display the amount of time left on the current map.^r^n",
+	"%s %s :%sip - Display the IP of the server.^r^n",
+	"%s %s :%sstatus - Display the status of the server.^r^n"
+}
+
+static irc_help_commands_trailer[] = {
+	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them.^r^n"
+}
+
+irc_print_help_commands_header(message_type[], nick[])
+{
+	for (new i = 0; i < sizeof(irc_help_commands_header); i++)
+	{
+		irc_print(irc_help_commands_header[i], message_type, nick);
+	}
+}
+
+irc_print_help_commands(message_type[], nick[], prefix[])
+{
+	for (new i = 0; i < sizeof(irc_help_commands); i++)
+	{
+		irc_print(irc_help_commands[i], message_type, nick, prefix);
+	}
+}
+
+irc_print_help_commands_trailer(message_type[], nick[])
+{
+	for (new i = 0; i < sizeof(irc_help_commands_trailer); i++)
+	{
+		irc_print(irc_help_commands_trailer[i], message_type, nick);
+	}
+}
+
+public irc_cmd_list(name[], priv)
+{
+	new message_type[8];
+	strcpy(message_type, (priv ? "PRIVMSG" : "NOTICE"));
+
+	new prefix[2];
+	strcpy(prefix, (priv ? "" : "@"));
+
+	irc_print_help_commands_header (message_type, name);
+	irc_print_help_commands        (message_type, name, prefix);
+	if (!priv) // only if private message
+	irc_print_help_commands_trailer(message_type, name);
+
+	new adminaccess = is_irc_admin(name)
+	if (adminaccess == -1) return PLUGIN_CONTINUE
+
+	irc_print("%s %s :Admin commands available on the server are also available from IRC if you have sufficient access.^r^n", 
+						message_type, name);
+
+	return PLUGIN_CONTINUE
+}
+
+// main functions
+
 public plugin_init()
 {
 	register_plugin("HLDS<->IRC","2.7","devicenull")
@@ -185,6 +267,12 @@ public startup_message(style,name[])
 			format(temp,1024,"PRIVMSG %s :%s^r^n",chan,cvarstr)
 		additem(temp)
 	}
+}
+
+irc_print(string[], ...)
+{
+	vformat(temp, 1024, string, 2);
+	additem(temp);
 }
 
 public irc_connect()
@@ -689,68 +777,6 @@ public client_disconnect(id)
 		additem(temp)
 	}
 	return 0
-}
-
-public irc_cmd_list(name[],priv)
-{
-	if(priv)
-	{
-		format(temp,1024,"PRIVMSG %s :IRC<->HLDS - Written by Devicenull maintained by twistedeuphoria and {NM}JRBLOODMIST ^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :cmds / commands / help / info - Display this help.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :players - List the users currently on the server.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :login <username> <password> - Log into HLDS<->IRC as an admin.  This may only be PMed to this bot.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :logout - Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC. This may only be PMed to this bot.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :map - Display the currently played map.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :nextmap - Display the next map in the map cycle.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :timeleft - Display the amount of time left on the current map.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :ip - Display the IP of the server.^r^n",name)
-		additem(temp)
-		format(temp,1024,"PRIVMSG %s :status - Display the status of the server.^r^n",name)
-		additem(temp)
-	}
-	else
-	{
-		format(temp,1024,"NOTICE %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria and {NM}JRBLOODMIST ^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :Available commands:^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :@cmds / @commands / @help / @info - Display this help.^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :@players - List the users currently on the server.^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :@map - Display the currently played map.^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :@nextmap - Display the next map in the map cycle.^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :@timeleft - Display the amount of time left on the current map.^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :@ip - Display the IP of the server.^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :@status - Display the status of the server.^r^n",name)
-		additem(temp)
-		format(temp,1024,"NOTICE %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them.^r^n",name)
-		additem(temp)
-	}
-	new adminaccess = is_irc_admin(name)
-	if(adminaccess == -1)
-		return PLUGIN_CONTINUE
-	additem(temp)
-	if(priv)
-		format(temp,1024,"PRIVMSG %s :Admin commands available on the server are also available from IRC if you have sufficient access.^r^n",name)
-	else
-		format(temp,1024,"NOTICE %s :Admin commands available on the server are also available from IRC if you have sufficient access.^r^n",name)
-	additem(temp)
-	return PLUGIN_CONTINUE
 }
 
 public is_irc_admin(name[])
