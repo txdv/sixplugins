@@ -54,6 +54,19 @@ strcpy(dest[], source[])
 	dest[length] = 0;
 }
 
+inttostrlen(integer)
+{
+	format(temp, 1024, "%d", integer);
+	return strlen(temp);
+}
+
+fill(character, count)
+{
+	for (new i = 0; i < count; i++) temp[i] = character;
+	temp[count] = 0;
+	return temp;
+}
+
 // irc functions
 
 static irc_help_commands_header[] =
@@ -790,19 +803,6 @@ public is_irc_admin(name[])
 	if(adminnum > -1)
 		return usersaccess[adminnum]
 	return -1
-}
-
-inttostrlen(integer)
-{
-	format(temp, 1024, "%d", integer);
-	return strlen(temp);
-}
-
-fill(character, count)
-{
-	for (new i = 0; i < count; i++) temp[i] = character;
-	temp[count] = 0;
-	return temp;
 }
 
 public channel_commands(name[],command[])
