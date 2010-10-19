@@ -29,6 +29,8 @@ Version 2.0
 #define ACCESS_IRC ADMIN_LEVEL_C
 #define MAX_USERS 32
 
+#define max(%1,%2) (%1 > %2 ? %1 : %2)
+
 new server[64], port, nick[32], username[32], chan[32], error // Stuff needed to connect
 new irc_socket //Connection
 new temp[1024] //Put together messages with this
@@ -764,6 +766,19 @@ public is_irc_admin(name[])
 	return -1
 }
 
+inttostrlen(integer)
+{
+	format(temp, 1024, "%d", integer);
+	return strlen(temp);
+}
+
+fill(character, count)
+{
+	for (new i = 0; i < count; i++) temp[i] = character;
+	temp[count] = 0;
+	return temp;
+}
+
 public channel_commands(name[],command[])
 {
 	if(equali(command,"@cmds") || equali(command,"@info") || equali(command,"@commands") || equali(command,"@help"))  //UPDATE AS ALONG
@@ -808,14 +823,42 @@ public channel_commands(name[],command[])
 		format(temp,1024,"NOTICE %s :Begin Players List^r^n",name)
 		additem(temp)
 		new authid[35],uname[32],ip[51],ping,loss
-		for(new anum=0;anum<34;anum++)
+		new authid_max = 0, uname_max = 0, ip_max = 0, ping_max = 0, loss_max = 0
+
+		for (new i = 0; i < 34; i++)
 		{
-			if(!is_user_connected(anum)) continue
-			get_user_authid(anum,authid,34)
-			get_user_name(anum,uname,31)
-			get_user_ip(anum,ip,50)
-			get_user_ping(anum,ping,loss)
-			format(temp,1024,"NOTICE %s :#%d    %s    %s    %s    %d    %d^r^n",name,anum,authid,uname,ip,ping,loss)
+			if (!is_user_connected(i)) continue;
+
+			get_user_authid (i, authid, 34);
+			get_user_name   (i, uname,  31);
+			get_user_ip     (i, ip,     50);
+			get_user_ping   (i, ping,   loss);
+
+			authid_max = max(authid_max, strlen(authid));
+			uname_max  = max(uname_max,  strlen(uname ));
+			ip_max     = max(ip_max,     strlen(ip    ));
+
+			ping_max = max(ping_max, inttostrlen(ping));
+			loss_max = max(loss_max, inttostrlen(loss));
+		}
+
+		for (new i = 0; i < 34; i++)
+		{
+			if (!is_user_connected(i)) continue;
+
+			get_user_authid (i, authid, 34);
+			get_user_name   (i, uname,  31);
+			get_user_ip     (i, ip,     50);
+			get_user_ping   (i, ping,   loss);
+
+			format(temp, 1024, "NOTICE %s :#%d %s%s %s%s %s%s %s%d %s%d^r^n", name, i,
+						 fill(' ', authid_max - strlen(authid)), authid,
+						 fill(' ', uname_max  - strlen(uname)),  uname,
+						 fill(' ', ip_max     - strlen(ip)),     ip,
+						 fill(' ', ping_max   - inttostrlen(ping)), ping,
+						 fill(' ', loss_max   - inttostrlen(loss)),  loss
+						 )
+
 			additem(temp)
 		}
 		format(temp,1024,"NOTICE %s :End Players List^r^n",name)
