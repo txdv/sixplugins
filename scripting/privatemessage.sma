@@ -227,8 +227,13 @@ public message_check_sql(failstate, Handle:query, error[], errorcode)
 			new msgid = SQL_ReadResult(query, 0);
 			SQL_ReadResult(query, 2, authid, sizeof(authid) -1);
 			new type = SQL_ReadResult(query, 3);
-			SQL_ReadResult(query, 4, cache, sizeof(cache) -1);
+
+			new text[512];
+			SQL_ReadResult(query, 4, text, sizeof(text) -1);
 			SQL_ReadResult(query, 5, duration);
+
+			new name[32];
+			SQL_ReadResult(query, 9, name, sizeof(name) -1);
 
 			new id = find_player("c", authid);
 
@@ -242,7 +247,14 @@ public message_check_sql(failstate, Handle:query, error[], errorcode)
 
 			// take the resource
 			message[id] = 1;
-			tutor_text(id, type, cache);
+
+			if (strlen(name) > 0)
+			{
+				formatex(cache, sizeof(cache) -1, "%s: %s", name, text);
+				tutor_text(id, type, cache);
+			}
+			else
+				tutor_text(id, type, text);
 
 			new args[1];
 			args[0] = id;
