@@ -69,9 +69,9 @@ public plugin_init()
 	set_task(2.0, "message_check_task");
 
 	gcv_hostname = register_cvar("pm_hostname", "127.0.0.1");
-	gcv_username = register_cvar("pm_username", " ");
-	gcv_password = register_cvar("pm_password", " ");
-	gcv_database = register_cvar("pm_database", " ");
+	gcv_username = register_cvar("pm_username", "");
+	gcv_password = register_cvar("pm_password", "");
+	gcv_database = register_cvar("pm_database", "");
 }
 
 public plugin_cfg()
