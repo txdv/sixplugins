@@ -1,7 +1,6 @@
 #include <amxmodx>
 #include <amxmisc>
 #include <sqlx>
-#include <psychostats>
 
 #pragma semicolon 1
 #pragma ctrlchar '\'
@@ -12,14 +11,6 @@
 
 #define MESSAGE_SOUND "buttons/bell1.wav"
 #define read_sargv(%1,%2) read_argv(%1, %2, sizeof(%2) -1)
-
-enum
-{
-	RED = 1,
-	BLUE,
-	YELLOW,
-	GREEN
-}
 
 new g_MsgTutor, g_MsgTutClose;
 new Handle:g_sqltuple, Handle:g_sqlcon;
@@ -85,7 +76,7 @@ public plugin_init()
 
 public plugin_cfg()
 {
-	new hostname[32].
+	new hostname[32],
 	    username[32],
 			password[32],
 			database[32];
@@ -105,17 +96,6 @@ public plugin_cfg()
 	{
 		server_print("Couldn't connect to the database: %s", err);
 	}
-
-	if (!ps_check(g_sqlcon, "ps3_"))
-	{
-		server_print("No PsychoStats installiation present");
-	}
-
-	//server_print("PsychoStats version %s",
-	//             ps_get_config_variable_value(g_sqlcon, "ps3_", "version"));
-
-	// get the uniqueid type
-	g_psuniqueid = ps_uniqueid(g_sqlcon, "ps3_");
 }
 
 public plugin_end()
