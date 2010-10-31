@@ -266,7 +266,7 @@ public message_duration_task(args[])
 {
 	new id = args[0];
 	// TODO: add maybe some
-	if (is_user_connected(id))
+	if (message[id] && is_user_connected(id))
 	{
 		tutor_close(id);
 		// now everyone can use this again
