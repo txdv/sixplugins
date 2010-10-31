@@ -81,6 +81,8 @@ public plugin_cfg()
 	    password[32],
 	    database[32];
 
+	server_exec();
+
 	get_pcvar_string(gcv_hostname, hostname, sizeof(hostname) -1);
 	get_pcvar_string(gcv_username, username, sizeof(username) -1);
 	get_pcvar_string(gcv_password, password, sizeof(password) -1);
