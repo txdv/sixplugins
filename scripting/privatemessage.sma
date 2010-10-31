@@ -122,6 +122,11 @@ public client_putinserver(id)
 	SQL_ThreadQuery(g_sqltuple, "handle_load", cache, dataid, 1);
 }
 
+public client_disconnect(id)
+{
+	message[id] = 1;
+}
+
 public handle_load(failstate, Handle:query, error[], errorcode, dataid[])
 {
 	new id = dataid[0];
@@ -174,7 +179,7 @@ public message_check_task(id)
 	new first = 1;
 	for (new id = 0; id < sizeof(message); id++)
 	{
-		if (!message[id])
+		if (!message[id] && is_user_connected(id))
 		{
 			new authid[32];
 			get_user_authid(id, authid, sizeof(authid) -1);
@@ -260,9 +265,13 @@ public message_check_sql(failstate, Handle:query, error[], errorcode)
 public message_duration_task(args[])
 {
 	new id = args[0];
-	tutor_close(id);
-	// now everyone can use this again
-	message[id] = 0;
+	// TODO: add maybe some
+	if (is_user_connected(id))
+	{
+		tutor_close(id);
+		// now everyone can use this again
+		message[id] = 0;
+	}
 }
 
 public message_showdate_update(failstate, Handle:query, error[], errorcode)
