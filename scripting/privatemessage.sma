@@ -14,13 +14,13 @@
 
 new g_MsgTutor, g_MsgTutClose;
 new Handle:g_sqltuple, Handle:g_sqlcon;
-new g_psuniqueid;
 new g_psprefix[10];
 
 new gcv_hostname,
     gcv_username,
     gcv_password,
-    gcv_database;
+    gcv_database,
+    gcv_prefix;
 
 static czero_files[][] = {
 	// the borders
@@ -72,6 +72,7 @@ public plugin_init()
 	gcv_username = register_cvar("pm_username", "");
 	gcv_password = register_cvar("pm_password", "");
 	gcv_database = register_cvar("pm_database", "");
+	gcv_prefix = register_cvar("pm_prefix", "ps_");
 }
 
 public plugin_cfg()
@@ -87,6 +88,7 @@ public plugin_cfg()
 	get_pcvar_string(gcv_username, username, sizeof(username) -1);
 	get_pcvar_string(gcv_password, password, sizeof(password) -1);
 	get_pcvar_string(gcv_database, database, sizeof(database) -1);
+	get_pcvar_string(gcv_prefix, g_psprefix, sizeof(g_psprefix) -1);
 
 	g_sqltuple = SQL_MakeDbTuple(hostname, username, password, database);
 
@@ -189,7 +191,7 @@ public message_check_task(id)
 	{
 		// there was at least one playa, let's make an sql call
 
-		formatex(cache, sizeof(cache) -1, "SELECT *, (SELECT name FROM ps3_plr_profile WHERE uniqueid = t1.sender) as name FROM messages t1 INNER JOIN (SELECT target, min(id) as id from messages WHERE showdate IS NULL AND (%s) GROUP BY target) t2 ON t1.id = t2.id", precache);
+		formatex(cache, sizeof(cache) -1, "SELECT *, (SELECT name FROM %splr_profile WHERE uniqueid = t1.sender) as name FROM messages t1 INNER JOIN (SELECT target, min(id) as id from messages WHERE showdate IS NULL AND (%s) GROUP BY target) t2 ON t1.id = t2.id", g_psprefix, precache);
 
 		//log_amx("query: %s", cache);
 		SQL_ThreadQuery(g_sqltuple, "message_check_sql", cache);
@@ -252,6 +254,7 @@ public message_check_sql(failstate, Handle:query, error[], errorcode)
 	}
 	else
 		set_task(2.0, "message_check_task");
+	return PLUGIN_HANDLED;
 }
 
 public message_duration_task(args[])
