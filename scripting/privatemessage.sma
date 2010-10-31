@@ -78,8 +78,8 @@ public plugin_cfg()
 {
 	new hostname[32],
 	    username[32],
-			password[32],
-			database[32];
+	    password[32],
+	    database[32];
 
 	get_pcvar_string(gcv_hostname, hostname, sizeof(hostname) -1);
 	get_pcvar_string(gcv_username, username, sizeof(username) -1);
