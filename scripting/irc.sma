@@ -114,6 +114,11 @@ irc_print(string[], ...)
 	additem(temp);
 }
 
+public irc_server_status(message_type[], target[])
+{
+	irc_print("%s %s :%s^r^n", message_type, target, get_server_status());
+}
+
 public irc_join(chan[])
 {
 	irc_print("JOIN %s^r^n", chan);
@@ -499,10 +504,10 @@ public IRC_Init()
 	get_cvar_string("irc_channel",chan,32)
 	get_cvar_string("irc_username",username,32)
 	port = get_cvar_num("irc_port")
-	if(irc_socket > 0)
-	{
-		startup_message(0,"")
-	}
+
+	if (irc_socket > 0)
+		irc_server_status("PRIVMSG", chan);
+
 	new directory[176]
 	get_configsdir(directory,175)
 	format(accessfile,200,"%s/ircadmins.ini",directory)
@@ -548,16 +553,6 @@ public admin_check()
 	}
 }
 
-public startup_message(style, name[])
-{
-	switch (style)
-	{
-		case 1:  irc_print("PRIVMSG %s: %s^r^n", name, get_server_status());
-		case 2:	 irc_print("NOTICE %s: %s^r^n",  name, get_server_status());
-		default: irc_print("PRIVMSG %s: %s^r^n", chan, get_server_status());
-	}
-}
-
 public irc_connect()
 {
 	get_cvar_string("irc_server",server,64)
@@ -594,7 +589,7 @@ public irc_connect()
 	irc_join_default()
 	set_cvar_num("irc_clientport",irc_socket)
 	irc_identify()
-	startup_message(0,"")
+	irc_server_status("PRIVMSG", chan);
 
 
 	return irc_socket
@@ -646,7 +641,7 @@ public irc_dataparse(rdata[])
 				irc_join_default()
 				set_cvar_num("irc_clientport",irc_socket)
 				irc_identify()
-				startup_message(0,"")
+				irc_server_status("PRIVMSG", chan);
 				return 0
 			} //Occurs after successful connection
 			case 403: { server_print("[IRC] Warning: We are not in the channel, but we tried to send a message to it and the channel is empty, channel %s",chan); return 0; }
