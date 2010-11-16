@@ -534,12 +534,14 @@ public IRC_Init()
 	if (irc_socket > 0)
 		irc_server_status(IRC_MSG_PRIVMSG, chan);
 
-	new directory[176]
-	get_configsdir(directory,175)
-	format(accessfile,200,"%s/ircadmins.ini",directory)
-	get_datadir(directory,175)
-	format(loginfile,200,"%s/ircloggedin.list",directory)
+	new directory[128];
+	get_configsdir(directory, sizeof(directory)-1);
+	format(accessfile, sizeof(accessfile)-1, "%s/ircadmins.ini", directory);
 	admin_file_create();
+
+	get_datadir(directory, sizeof(directory)-1);
+	format(loginfile, sizeof(loginfile)-1, "%s/ircloggedin.list", directory);
+
 	admin_check()
 }
 
@@ -557,9 +559,7 @@ public admin_check()
 {
 	if(!file_exists(loginfile))
 	{
-		new writestr[201]
-		format(writestr,200,"HLDS<->IRC Logged In Admins File...DO NOT MODIFY")
-		write_file(loginfile,writestr)
+		write_file(loginfile, "HLDS<->IRC Log file")
 	}
 	else
 	{
