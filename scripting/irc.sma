@@ -644,157 +644,158 @@ static irc_numeric_events[][] = {
 
 public irc_dataparse(rdata[])
 {
-	if(strlen(rdata) > 0)
-	{ //If there is data
-		new arg1[128],arg1len,arg2[128] ,arg2len, arg3[128]
-		copyc(arg1,128,rdata,32)
-		arg1len = strlen(arg1)
-		copyc(arg2,128,rdata[arg1len+1],32)
-		arg2len = strlen(arg2)
-		copyc(arg3,128,rdata[arg1len+arg2len+2],32)
-		new numeric_event = str_to_num(arg2);
-		switch (numeric_event)
-		{
-			// Numeric Events - http://www.faqs.org/rfcs/rfc1459.html
-			case 001:
-			{
-				server_print("[IRC] Connected sucessfully");
-				irc_join_default();
-				set_cvar_num("irc_socket", irc_socket);
-				irc_identify();
-				irc_server_status("PRIVMSG", chan);
-				return 0;
-			}
-			// Following events occure after successful connection
-			case 513:
-			{
-				server_print("[IRC] Error: Registration failed, try again later");
-				irc_quit("");
-				return 0;
-			}
-			// events with message, but no action
-			default:
-			{
-				for (new i = 0; i < sizeof(irc_numeric_events); i++)
-				{
-					if (irc_numeric_events[i][0] == numeric_event)
-					{
-						server_print("[IRC] Error: %s", irc_numeric_events[i][1]);
-						return 0;
-					}
-				}
-			}
-		}
+	if (!strlen(rdata))
+		return 0;
 
-		if (get_cvar_num("irc_debug"))
-			server_print("[IRC]<- %s", rdata);
-
-
-		if( contain(rdata, "^r^nPING :") > -1 )
+	//If there is data
+	new arg1[128],arg1len,arg2[128] ,arg2len, arg3[128]
+	copyc(arg1,128,rdata,32)
+	arg1len = strlen(arg1)
+	copyc(arg2,128,rdata[arg1len+1],32)
+	arg2len = strlen(arg2)
+	copyc(arg3,128,rdata[arg1len+arg2len+2],32)
+	new numeric_event = str_to_num(arg2);
+	switch (numeric_event)
+	{
+		// Numeric Events - http://www.faqs.org/rfcs/rfc1459.html
+		case 001:
 		{
-			new arg2[33];
-			copy(arg2, 32, rdata[contain(rdata, "^r^nPING :")])
-			replace_all(arg2, 32, "^r^nPING :", "");
-			replace_all(arg2, 32, "^r^n", "");
-			irc_pong(arg2);
-			pings++
-			return 0
+			server_print("[IRC] Connected sucessfully");
+			irc_join_default();
+			set_cvar_num("irc_socket", irc_socket);
+			irc_identify();
+			irc_server_status("PRIVMSG", chan);
+			return 0;
 		}
-		else if (equali(arg1,"PING"))
+		// Following events occure after successful connection
+		case 513:
 		{
-			irc_pong(arg2);
-			pings++
-			return 0
-		}
-		else if (equali(arg2,"PRIVMSG"))
-		{
-			// Username!Ident@Host PRIVMSG Destination :Message
-			new user[32], message[768], frmt[256]
-			new arg123len
-			copyc(user,32,arg1[1],33) //Get the username out of arg1
-			arg123len = strlen(arg1) + 1 + strlen(arg2) + 1 + strlen(arg3) + 1
-			copy(message,768,rdata[arg123len])
-			copyc(message,768,message,13)
-			new truemessage[768]
-			copy(truemessage,768,message[1])
-			if(equali(arg3,chan))
-			{
-				//channel_commands(user, truemessage)
-				irc_handle_commands(user, truemessage, 0);
-			}
-			else {
-				//private_commands(user, truemessage)
-				irc_handle_commands(user, truemessage, 1);
-			}
-			if(is_irc_admin(user) != -1)
-				admin_commands(user, truemessage)
-			if (equali(arg3,chan))
-			{
-				new firstword[128]
-				copyc(firstword,128,message[1],44)
-				// Its a message that should go to the server
-				if (get_cvar_num("irc_prefix"))
-					format(frmt,256,"%s@%s <%s> %s",chan,server,user,message[1])
-				else
-					format(frmt,256,"*IRC* <%s> %s",user,message[1])
-				if(!get_cvar_num("irc_to_hlds_say_auto"))
-				{
-					new activator[26]
-					get_cvar_string("irc_to_hlds_say_activator",activator,25)
-					if(containi(frmt,activator) == -1)
-						return 0
-					else
-					{
-						replace(frmt,256,activator,"")
-					}
-				}
-				client_print(0,print_chat,"%s",frmt)
-				return 0
-			}
-		}
-		else if(equali(arg2,"NICK"))
-		{
-			new oldname[31], newname[31], tempname[32]
-			copy(newname,30,arg3[1])
-			copyc(tempname,31,arg1,33)
-			copy(oldname,30,tempname[1])
-			trim(oldname)
-			trim(newname)
-			for(new inum=0;inum<MAX_USERS;inum++)
-			{
-				if(equali(users[inum],oldname))
-				{
-					copy(users[inum],30,newname)
-					new retstr[201], jnum, a
-					while(read_file(loginfile,jnum,retstr,200,a) != 0)
-					{
-						new usern[31], uaccess[31], fid[31]
-						parse(retstr,usern,30,uaccess,30,fid,30)
-						if(equali(usern,oldname))
-						{
-							replace(retstr,200,oldname,newname)
-							write_file(loginfile,retstr,jnum)
-						}
-						jnum++
-					}
-				}
-			}
-		}
-		else if(equali(arg2,"QUIT"))
-		{
-			new leavename[31], tempname[32]
-			copyc(tempname,31,arg1,33)
-			copy(leavename,30,tempname[1])
-			irc_admin_logout(leavename,0)
-		}
-		else if (equali(arg1,"ERROR"))
-		{
+			server_print("[IRC] Error: Registration failed, try again later");
 			irc_quit("");
-			server_print("[IRC] Disconnected, trying to reconnect")
-			set_task(Float:60,"irc_connect")
+			return 0;
+		}
+		// events with message, but no action
+		default:
+		{
+			for (new i = 0; i < sizeof(irc_numeric_events); i++)
+			{
+				if (irc_numeric_events[i][0] == numeric_event)
+				{
+					server_print("[IRC] Error: %s", irc_numeric_events[i][1]);
+					return 0;
+				}
+			}
 		}
 	}
-	return 0
+
+	if (get_cvar_num("irc_debug"))
+		server_print("[IRC]<- %s", rdata);
+
+
+	if( contain(rdata, "^r^nPING :") > -1 )
+	{
+		new arg2[33];
+		copy(arg2, 32, rdata[contain(rdata, "^r^nPING :")])
+		replace_all(arg2, 32, "^r^nPING :", "");
+		replace_all(arg2, 32, "^r^n", "");
+		irc_pong(arg2);
+		pings++
+		return 0
+	}
+	else if (equali(arg1,"PING"))
+	{
+		irc_pong(arg2);
+		pings++
+		return 0
+	}
+	else if (equali(arg2,"PRIVMSG"))
+	{
+		// Username!Ident@Host PRIVMSG Destination :Message
+		new user[32], message[768], frmt[256]
+		new arg123len
+		copyc(user,32,arg1[1],33) //Get the username out of arg1
+		arg123len = strlen(arg1) + 1 + strlen(arg2) + 1 + strlen(arg3) + 1
+		copy(message,768,rdata[arg123len])
+		copyc(message,768,message,13)
+		new truemessage[768]
+		copy(truemessage,768,message[1])
+		if(equali(arg3,chan))
+		{
+			//channel_commands(user, truemessage)
+			irc_handle_commands(user, truemessage, 0);
+		}
+		else {
+			//private_commands(user, truemessage)
+			irc_handle_commands(user, truemessage, 1);
+		}
+		if(is_irc_admin(user) != -1)
+			admin_commands(user, truemessage)
+		if (equali(arg3,chan))
+		{
+			new firstword[128]
+			copyc(firstword,128,message[1],44)
+			// Its a message that should go to the server
+			if (get_cvar_num("irc_prefix"))
+				format(frmt,256,"%s@%s <%s> %s",chan,server,user,message[1])
+			else
+				format(frmt,256,"*IRC* <%s> %s",user,message[1])
+			if(!get_cvar_num("irc_to_hlds_say_auto"))
+			{
+				new activator[26]
+				get_cvar_string("irc_to_hlds_say_activator",activator,25)
+				if(containi(frmt,activator) == -1)
+					return 0
+				else
+				{
+					replace(frmt,256,activator,"")
+				}
+			}
+			client_print(0,print_chat,"%s",frmt)
+			return 0
+		}
+	}
+	else if(equali(arg2,"NICK"))
+	{
+		new oldname[31], newname[31], tempname[32]
+		copy(newname,30,arg3[1])
+		copyc(tempname,31,arg1,33)
+		copy(oldname,30,tempname[1])
+		trim(oldname)
+		trim(newname)
+		for(new inum=0;inum<MAX_USERS;inum++)
+		{
+			if(equali(users[inum],oldname))
+			{
+				copy(users[inum],30,newname)
+				new retstr[201], jnum, a
+				while(read_file(loginfile,jnum,retstr,200,a) != 0)
+				{
+					new usern[31], uaccess[31], fid[31]
+					parse(retstr,usern,30,uaccess,30,fid,30)
+					if(equali(usern,oldname))
+					{
+						replace(retstr,200,oldname,newname)
+						write_file(loginfile,retstr,jnum)
+					}
+					jnum++
+				}
+			}
+		}
+	}
+	else if(equali(arg2,"QUIT"))
+	{
+		new leavename[31], tempname[32]
+		copyc(tempname,31,arg1,33)
+		copy(leavename,30,tempname[1])
+		irc_admin_logout(leavename,0)
+	}
+	else if (equali(arg1,"ERROR"))
+	{
+		irc_quit("");
+		server_print("[IRC] Disconnected, trying to reconnect")
+		set_task(Float:60,"irc_connect")
+	}
+	return 0;
 }
 public additem(item[])
 {
