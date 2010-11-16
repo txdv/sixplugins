@@ -115,6 +115,15 @@ irc_print(string[], ...)
 	additem(temp);
 }
 
+public irc_quit(message[])
+{
+	format(temp, sizeof(temp)-1,"QUIT :%s ^r^n", message);
+	socket_send(irc_socket, temp, 0);
+	socket_close(irc_socket);
+	irc_socket = 0;
+	set_cvar_num("irc_socket", 0);
+}
+
 public irc_pong(target[])
 {
 	irc_print("PONG :%s^r^n", target)
@@ -642,7 +651,7 @@ public irc_dataparse(rdata[])
 			case 474: { server_print("[IRC] Error: We are banned from that channel"); return 0; }
 			case 475: { server_print("[IRC] Error: Channel is +k and we don't have the key!"); return 0; }
 			case 482: { server_print("[IRC] Error: Can't set modes when we aren't op"); return 0; }
-			case 513: { server_print("[IRC] Error: Registration failed, try again later"); end(); return 0; }
+			case 513: { server_print("[IRC] Error: Registration failed, try again later"); irc_quit(""); return 0; }
 		}
 
 		if (get_cvar_num("irc_debug"))
@@ -748,7 +757,7 @@ public irc_dataparse(rdata[])
 		}
 		else if (equali(arg1,"ERROR"))
 		{
-			end()
+			irc_quit("");
 			server_print("[IRC] Disconnected, trying to reconnect")
 			set_task(Float:60,"irc_connect")
 		}
@@ -793,12 +802,6 @@ public sendnext()
 	}
 }
 
-public end()
-{
-	format(temp,1024,"QUIT : HLDS<->IRC by Devicenull ^r^n")
-	socket_send(irc_socket,temp,0)
-	set_cvar_num("irc_socket",0)
-}
 
 public irc_identify()
 {
@@ -829,7 +832,7 @@ public parseirc(id)
 	}
 	else if (equali(arg1,"disconnect"))
 	{
-		end()
+		irc_quit("");
 		console_print(id,"[IRC] Disconnecting")
 		return PLUGIN_HANDLED
 	}
