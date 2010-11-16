@@ -1099,56 +1099,58 @@ public is_irc_admin(name[])
 
 public irc_admin_logout(adminname[], report)
 {
-	new adminnum = 0, bool:there = false
-	for(new inum=0;inum<MAX_USERS;inum++)
+	new adminnum = 0, bool:there = false;
+
+	for (new inum=0;inum < MAX_USERS; inum++)
 	{
-		if(equali(users[inum],adminname))
+		if (equali(users[inum],adminname))
 		{
-			there = true
-			adminnum = inum
+			there = true;
+			adminnum = inum;
 		}
 	}
-	if(!there)
+
+	if (!there)
 	{
-		format(temp,1024,"PRIVMSG %s :You are not logged in as an admin.^r^n",adminname)
-		additem(temp)
-		return PLUGIN_CONTINUE
+		irc_privmsg(adminname, "You are not logged in as an admin.");
+		return PLUGIN_CONTINUE;
 	}
-	for(new inum=adminnum;inum<MAX_USERS;inum++)
+
+	for (new inum = adminnum; inum < MAX_USERS; inum++)
 	{
 		if(strlen(users[inum+1]) > 0)
 		{
-			copy(users[inum],30,users[inum+1])
-			usersaccess[inum] = usersaccess[inum+1]
-			usersid[inum] = usersid[inum+1]
+			copy(users[inum], 30, users[inum+1]);
+			usersaccess[inum] = usersaccess[inum+1];
+			usersid[inum] = usersid[inum+1];
 		}
 		else
 		{
-			copy(users[inum],30,"")
-			usersaccess[inum] = -1
-			usersid[inum] = -1
-			break
+			copy(users[inum], 30, "");
+			usersaccess[inum] = -1;
+			usersid[inum] = -1;
+			break;
 		}
 	}
-	new retstr[201], fnum, a
-	while(read_file(loginfile,fnum,retstr,200,a) != 0)
+
+	new retstr[256], fnum, a;
+	while (read_file(loginfile, fnum, retstr, sizeof(retstr)-1, a))
 	{
-		new fuser[31], faccess[31], fid[31]
-		parse(retstr,fuser,30,faccess,30,fid,30)
-		if(equali(fuser,adminname))
-		{
-			new writestr[201]
-			format(writestr,200,"")
-			write_file(loginfile,writestr,fnum)
-		}
+		new fuser[32], faccess[32], fid[32];
+		parse(retstr, fuser,   sizeof(fuser)   -1,
+		              faccess, sizeof(faccess) -1,
+									fid,     sizeof(fid)     -1);
+
+		if (equali(fuser,adminname))
+			write_file(loginfile, "", fnum)
+
 		fnum++
 	}
-	if(report)
-	{
-		format(temp,1024,"PRIVMSG %s :You have logged out.^r^n",adminname)
-		additem(temp)
-	}
-	return PLUGIN_CONTINUE
+
+	if (report)
+		irc_privmsg(adminname, "You have logged out.");
+
+	return PLUGIN_CONTINUE;
 }
 
 public admin_commands(name[],command[])
