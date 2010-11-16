@@ -73,6 +73,7 @@ fill(character, count)
 format2(string[], ...)
 {
 	vformat(temp, 1024, string, 2);
+
 	return temp;
 }
 
@@ -447,24 +448,27 @@ public get_server_status()
 public plugin_init()
 {
 	register_plugin("HLDS<->IRC","2.7","devicenull")
-	register_dictionary("admincmd.txt")
-	register_dictionary("common.txt")
-	register_dictionary("pausecfg.txt")
+
+	register_dictionary("admincmd.txt");
+	register_dictionary("common.txt"  );
+	register_dictionary("pausecfg.txt");
+
 	// Cvars
-	register_cvar("irc_server","")
-	register_cvar("irc_nick","")
-	register_cvar("irc_username","")
-	register_cvar("irc_port","")
-	register_cvar("irc_channel","")
+	register_cvar("irc_server",   "");
+	register_cvar("irc_nick",     "");
+	register_cvar("irc_username", "");
+	register_cvar("irc_port",     "");
+	register_cvar("irc_channel",  "");
 
 
-	register_cvar("irc_prefix","1")
-	register_cvar("irc_showjoins","1")
-	register_cvar("irc_joindelay","10")
-	register_cvar("irc_identify","0")
-	register_cvar("irc_debug","0")
+	register_cvar("irc_prefix",     "1");
+	register_cvar("irc_show_joins", "1");
+	register_cvar("irc_show_team",  "1");
+	register_cvar("irc_joindelay", "10");
+	register_cvar("irc_identify",   "0");
+	register_cvar("irc_debug",      "0");
 
-	register_cvar("irc_ident","",FCVAR_PROTECTED&FCVAR_UNLOGGED)
+	register_cvar("irc_ident", "", FCVAR_PROTECTED&FCVAR_UNLOGGED);
 
 	register_cvar("irc_map_change","1")
 	register_cvar("irc_to_hlds_say_auto","1")
@@ -478,12 +482,12 @@ public plugin_init()
 	register_cvar("irc_msg_srvpart", " $name ($steamid) has left the server");
 	register_cvar("irc_msg_startup", " $servername  - $ip Current Map: $map $curplayers / $maxplayers players");
 
-	register_cvar("irc_msg_usecolors","1")
+	register_cvar("irc_msg_usecolors", "1");
 
 	register_cvar("irc_socket","0",FCVAR_PROTECTED&FCVAR_UNLOGGED)
 
 	// Commands
-	register_concmd("irc","parseirc",0," Type ^"irc help^" for help")
+	register_concmd("irc","parseirc",0," Type ^"irc help^" for help");
 
 
 	register_clcmd("say","irc_saytext")
@@ -1013,7 +1017,7 @@ public irc_sayteamtext(id)
 
 public client_putinserver(id)
 {
-	if (irc_socket > 0 && get_cvar_num("irc_showjoins") == 1)
+	if (irc_socket > 0 && get_cvar_num("irc_show_joins") == 1)
 	{
 		str_get_cvar("irc_msg_srvjoin");
 
@@ -1027,7 +1031,7 @@ public client_putinserver(id)
 
 public client_disconnect(id)
 {
-	if (irc_socket > 0 && get_cvar_num("irc_showjoins") == 1)
+	if (irc_socket > 0 && get_cvar_num("irc_show_joins") == 1)
 	{
 		str_get_cvar("irc_msg_srvpart");
 
