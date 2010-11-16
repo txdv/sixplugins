@@ -874,13 +874,13 @@ public cmd_irc_disconnect(id)
 	console_print(id,"[IRC] Disconnecting")
 }
 
-public cmd_irc_say2(id)
+public cmd_irc_say(id)
 {
 	new msg[1024];
 	read_args(msg, sizeof(msg)-1);
-	// ommit "say2 "
-	// strlen("say2 ") == 5
-	irc_print("PRIVMSG %s :%s", chan, msg[5]);
+	// ommit "say "
+	// strlen("say ") == 4
+	irc_privmsg(chan, msg[4]);
 }
 
 public cmd_irc_join(id)
@@ -1003,7 +1003,7 @@ cmd_say_base(id, pub)
 	if (containi(msg,"/admin") != -1)
 	{
 		replace(msg, sizeof(msg)-1, "/admin", ""); // remove the /admin command
-		irc_print("PRIVMSG %s :Admin request by %s. %s", chan, name, msg);
+		irc_privmsg(chan, "Admin request by %s. %s", name, msg);
 		client_print(id, print_chat, "Your admin request was sent to the channel.");
 		return PLUGIN_HANDLED;
 	}
@@ -1040,7 +1040,7 @@ cmd_say_base(id, pub)
 		formatex(payload, sizeof(payload)-1, "%s%s: %s", payload, name, msg);
 
 
-	irc_print("PRIVMSG %s :<HLDS> %s", chan, payload);
+	irc_privmsg(chan, "<HLDS> %s", payload);
 	return PLUGIN_CONTINUE;
 }
 
@@ -1053,7 +1053,7 @@ public client_putinserver(id)
 		if (strlen(temp) == 0)
 			return 0;
 
-		irc_print("PRIVMSG %s :%s", chan, parsemessage(id, temp, ""));
+		irc_privmsg(chan, parsemessage(id, temp, ""));
 	}
 	return 0
 }
@@ -1067,7 +1067,7 @@ public client_disconnect(id)
 		if (strlen(temp) == 0)
 			return 0;
 
-		irc_print("PRIVMSG %s :%s", chan, parsemessage(id, temp, ""));
+		irc_privmsg(chan, parsemessage(id, temp, ""));
 	}
 	return 0
 }
