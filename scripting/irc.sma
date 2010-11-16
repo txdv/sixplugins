@@ -474,9 +474,9 @@ public plugin_init()
 
 
 	//Various Messages
-	register_cvar("irc_msg_srvjoin"," $name ($steamid) has joined the server")
-	register_cvar("irc_msg_srvpart"," $name ($steamid) has left the server")
-	register_cvar("irc_msg_startup"," $servername  - $ip Current Map: $map $curplayers / $maxplayers players")
+	register_cvar("irc_msg_srvjoin", " $name ($steamid) has joined the server");
+	register_cvar("irc_msg_srvpart", " $name ($steamid) has left the server");
+	register_cvar("irc_msg_startup", " $servername  - $ip Current Map: $map $curplayers / $maxplayers players");
 
 	register_cvar("irc_msg_usecolors","1")
 
@@ -865,33 +865,36 @@ public parseirc(id)
 	return PLUGIN_HANDLED
 }
 
-public parsemessage(id,input[],output[],amsg[])
+public parsemessage(id, input[], msg[])
 {
 	// Replaces $name $steamid $team $teamn $message with the right things
-	new name[32], authid[32], team[32], teamn, teamnstr[32], ctime, hrs, csec, flags[32], times[128]
-	new mtemp[1024]
-	get_user_name(id,name,32)
-	get_user_authid(id,authid,32)
-	get_user_team(id,team,32)
-	ctime = get_user_time(id)
-	get_flags(get_user_flags(id),flags,32)
-	hrs = floatround(float(ctime/60))
-	csec = ctime-(hrs*60)
-	format(times,128,"[%i:%i]",hrs,csec)
-	teamn = entity_get_int(id, EV_INT_team)
-	num_to_str(teamn,teamnstr,32)
-	copy(mtemp,512,input)
-	remove_quotes(amsg)
-	replace(mtemp,512,"$name",name)
-	replace(mtemp,512,"$steamid",authid)
-	replace(mtemp,512,"$teamn",teamnstr)
-	replace(mtemp,512,"$team",team)
-	replace(mtemp,512,"$message",amsg)
-	replace(mtemp,512,"$connected",times)
-	replace(mtemp,512,"$access",flags)
-	remove_quotes(mtemp)
-	remove_quotes(mtemp)
-	copy(output,1024,mtemp)
+	new name[32], authid[32], team[32], teamn, teamnstr[32], ctime, hrs, csec, flags[32], times[128];
+
+	get_user_name  (id, name,   sizeof(name)   -1);
+	get_user_authid(id, authid, sizeof(authid) -1);
+	get_user_team  (id, team,   sizeof(team)   -1);
+
+	get_flags(get_user_flags(id), flags, sizeof(flags) -1);
+
+	ctime = get_user_time(id);
+	hrs = floatround(float(ctime/60));
+	csec = ctime-(hrs*60);
+	format(times,128,"[%i:%i]", hrs, csec);
+	teamn = entity_get_int(id, EV_INT_team);
+	num_to_str(teamn,teamnstr, sizeof(teamnstr) -1);
+	copy(temp, strlen(input), input);
+	remove_quotes(msg);
+
+	replace(temp, sizeof(temp)-1, "$name",      name    );
+	replace(temp, sizeof(temp)-1, "$steamid",   authid  );
+	replace(temp, sizeof(temp)-1, "$teamn",     teamnstr);
+	replace(temp, sizeof(temp)-1, "$team",      team    );
+	replace(temp, sizeof(temp)-1, "$message",   msg     );
+	replace(temp, sizeof(temp)-1, "$connected", times   );
+	replace(temp, sizeof(temp)-1, "$access",    flags   );
+
+	remove_quotes(temp);
+	return temp;
 }
 
 public irc_saytext(id)
@@ -1012,27 +1015,26 @@ public client_putinserver(id)
 {
 	if (irc_socket > 0 && get_cvar_num("irc_showjoins") == 1)
 	{
-		new tmsg[1024]
-		get_cvar_string("irc_msg_srvjoin",tmsg,1024)
-		if (strlen(tmsg) == 0)
-			return 0
-		parsemessage(id,tmsg,temp,"")
-		format(temp,1024,"PRIVMSG %s :%s^r^n",chan,temp)
-		additem(temp)
+		str_get_cvar("irc_msg_srvjoin");
+
+		if (strlen(temp) == 0)
+			return 0;
+
+		irc_print("PRIVMSG %s :%s^r^n", chan, parsemessage(id, temp, ""));
 	}
 	return 0
 }
+
 public client_disconnect(id)
 {
 	if (irc_socket > 0 && get_cvar_num("irc_showjoins") == 1)
 	{
-		new tmsg[1024]
-		get_cvar_string("irc_msg_srvpart",tmsg,1024)
-		if (strlen(tmsg) == 0)
-			return 0
-		parsemessage(id,tmsg,temp,"")
-		format(temp,1024,"PRIVMSG %s :%s^r^n",chan,temp)
-		additem(temp)
+		str_get_cvar("irc_msg_srvpart");
+
+		if (strlen(temp) == 0)
+			return 0;
+
+		irc_print("PRIVMSG %s :%s^r^n", chan, parsemessage(id, temp, ""));
 	}
 	return 0
 }
