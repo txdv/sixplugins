@@ -157,8 +157,7 @@ irc_is_help_synonym(prefix, string[])
 	return false;
 }
 
-static irc_help_commands_header[][] =
-{
+static irc_help_commands_header[][] = {
 	"%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus ^r^n",
 	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):^r^n",
 	"%s %s :cmds / commands / help / info - Display this help.^r^n"
