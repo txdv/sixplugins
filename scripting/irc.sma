@@ -490,9 +490,9 @@ public plugin_init()
 
 	register_cvar("irc_map_change","1")
 	register_cvar("irc_to_hlds_say_auto","1")
-	register_cvar("irc_from_hlds_say_auto","1")
 	register_cvar("irc_to_hlds_say_activator","!hlds")
-	register_cvar("irc_from_hlds_say_activator","!irc")
+
+	register_cvar("irc_hlds_activator", "");
 
 
 	//Various Messages
@@ -508,8 +508,8 @@ public plugin_init()
 	register_concmd("irc","parseirc",0," Type ^"irc help^" for help");
 
 
-	register_clcmd("say","irc_saytext")
-	register_clcmd("say_team","irc_sayteamtext")
+	register_clcmd("say","cmd_say")
+	register_clcmd("say_team","cmd_say_team")
 
 	set_task(1.0, "IRC_Init");
 }
@@ -926,121 +926,76 @@ public parsemessage(id, input[], msg[])
 	return temp;
 }
 
-public irc_saytext(id)
+public cmd_say(id)
 {
-	if (irc_socket > 0)
-	{
-		new msg[1024]
-		read_args(msg,1024)
-		remove_quotes(msg)
-		if(strlen(msg) <= 0)
-			return PLUGIN_CONTINUE
-		new name[32]
-		get_user_name(id,name,31)
-		if(containi(msg,"/admin") != -1)
-		{
-			replace(msg,1024,"/admin","")
-			format(temp,1024,"PRIVMSG %s :Admin request by %s. %s^r^n",chan,name,msg)
-			server_print("TEMP: %s CHAN: %s",temp,chan)
-			additem(temp)
-			client_print(id,print_chat,"Your admin request was sent to the channel.")
-			return PLUGIN_HANDLED
-		}
-		else if(!get_cvar_num("irc_from_hlds_say_auto"))
-		{
-			new activator[26]
-			get_cvar_string("irc_from_hlds_say_activator",activator,25)
-			if(containi(msg,activator) == -1)
-				return PLUGIN_CONTINUE
-			else
-				replace(msg,1024,activator,"")
-		}
-		new finalmessage[301], len
-		len = format(finalmessage,300,"PRIVMSG %s :<HLDS> ",chan)
-		if(!is_user_alive(id))
-			len += format(finalmessage[len],300-len,"*DEAD* ")
-		if(get_cvar_num("irc_msg_usecolors"))
-		{
-			new team = get_user_team(id)
-			switch(team)
-			{
-				case 1:  len += format(finalmessage[len],300-len,"04%s", name);
-				case 2:  len += format(finalmessage[len],300-len,"12%s", name);
-				default: len += format(finalmessage[len],300-len,"00%s", name);
-			}
-		}
-		else
-			len += format(finalmessage[len],300-len,"%s",name)
-		len += format(finalmessage[len],300-len,": %s^r^n",msg)
-		additem(finalmessage)
-	}
-	return 0
+	return cmd_say_base(id, 1);
 }
 
-public irc_sayteamtext(id)
+public cmd_say_team(id)
 {
-	if (irc_socket > 0)
+	return cmd_say_base(id, 0);
+}
+
+static irc_team_colors[][] = { { "00" }, { "04" }, { "12" }, { "00" } };
+static irc_team_strings[][] = { { "Spectator" }, { "Terrorist "}, { "Counter-Terrorist" }, { "Spectator" } };
+
+cmd_say_base(id, pub)
+{
+	if (!irc_socket)
+		return PLUGIN_CONTINUE;
+
+	new msg[1024];
+
+	read_args(msg, sizeof(msg)-1);
+	remove_quotes(msg);
+
+	if(!strlen(msg))
+		return PLUGIN_CONTINUE;
+
+	new name[32];
+	get_user_name(id, name, sizeof(name)-1);
+	if (containi(msg,"/admin") != -1)
 	{
-		new msg[1024];
-		read_args(msg, sizeof(msg)-1)
-		remove_quotes(msg);
-
-		if(!strlen(msg))
-			return PLUGIN_CONTINUE;
-
-		new name[32];
-		get_user_name(id, name, sizeof(name)-1)
-
-		if (containi(msg,"/admin") != -1)
-		{
-			replace(msg, sizeof(msg), "/admin", ""); // remove the /admin command
-			irc_print("PRIVMSG %s :Admin request by %s. %s^r^n", chan, name, msg);
-			client_print(id, print_chat,"Your admin request was sent to the channel.");
-			return PLUGIN_HANDLED;
-		}
-		else if(!get_cvar_num("irc_from_hlds_say_auto"))
-		{
-			new activator[26]
-			get_cvar_string("irc_from_hlds_say_activator",activator,25)
-			if(containi(msg,activator) == -1)
-				return 0
-			else
-				replace(msg,1024,activator,"")
-		}
-		new finalmessage[301], len, team
-		len = format(finalmessage,300,"PRIVMSG %s :<HLDS> ",chan)
-		if(!is_user_alive(id))
-			len += format(finalmessage[len],300-len,"*DEAD* ")
-
-		new modname[50];
-		get_modname(modname, sizeof(modname)-1);
-
-		if(equali(modname,"cstrike"))
-		{
-			team = get_user_team(id);
-			switch(team)
-			{
-				case 1:  len += format(finalmessage[len], 300-len, "(Terrorist)",         name);
-				case 2:  len += format(finalmessage[len], 300-len, "(Counter-Terrorist)", name);
-				default: len += format(finalmessage[len], 300-len, "(Spectator)",         name);
-			}
-		}
-		if(get_cvar_num("irc_msg_usecolors"))
-		{
-			team = get_user_team(id)
-			switch(team)
-			{
-				case 1:  len += format(finalmessage[len],300-len,"04%s", name);
-				case 2:  len += format(finalmessage[len],300-len,"12%s", name);
-				default: len += format(finalmessage[len],300-len,"00%s", name);
-			}
-		}
-		else
-			len += format(finalmessage[len],300-len,"%s",name)
-		len += format(finalmessage[len],300-len,": %s^r^n",msg)
-		additem(finalmessage)
+		replace(msg, sizeof(msg)-1, "/admin", ""); // remove the /admin command
+		irc_print("PRIVMSG %s :Admin request by %s. %s^r^n", chan, name, msg);
+		client_print(id, print_chat, "Your admin request was sent to the channel.");
+		return PLUGIN_HANDLED;
 	}
-	return 0
+	else if (strlen(str_get_cvar("irc_hlds_activator")) > 0)
+	{
+		if (containi(msg, temp) == -1)
+			return PLUGIN_CONTINUE;
+		else
+			replace(msg, sizeof(msg), temp, "");
+	}
+
+	new payload[1024];
+	payload[0] = 0;
+
+	if (!is_user_alive(id))
+		strcat(payload, "*DEAD* ", sizeof(payload)-1);
+
+	new modname[50];
+	get_modname(modname, sizeof(modname)-1);
+
+	if (equali(modname, "cstrike"))
+	{
+		if (!pub)
+		{
+			formatex(payload, sizeof(payload)-1, "%s(%s) ", payload,
+																											irc_team_strings[get_user_team(id)]);
+		}
+		if (get_cvar_num("irc_msg_usecolors"))
+			strcat(payload, irc_team_colors[get_user_team(id)], sizeof(payload)-1);
+
+		formatex(payload, sizeof(payload)-1, "%s%s: %s", payload, name, msg);
+	}
+	else
+		formatex(payload, sizeof(payload)-1, "%s%s: %s", payload, name, msg);
+
+
+	irc_print("PRIVMSG %s :<HLDS> %s^r^n", chan, payload);
+	return PLUGIN_CONTINUE;
 }
 
 public client_putinserver(id)
