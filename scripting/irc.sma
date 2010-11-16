@@ -835,8 +835,6 @@ public sendnext()
 	}
 }
 
-
-
 public parseirc(id)
 {
 	if (!(get_user_flags(id)&ACCESS_IRC))
