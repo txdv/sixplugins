@@ -159,18 +159,6 @@ public irc_command_fits(command[], prefix)
 	return -1;
 }
 
-static irc_help_commands[][] =
-{
-	"%s %s :%splayers - List the users currently on the server.^r^n",
-	"%s %s :%slogin <username> <password> - Log into HLDS<->IRC as an admin.  This may only be PMed to this bot.^r^n",
-	"%s %s :%slogout - Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC. This may only be PMed to this bot.^r^n",
-	"%s %s :%smap - Display the currently played map.^r^n",
-	"%s %s :%snextmap - Display the next map in the map cycle.^r^n",
-	"%s %s :%stimeleft - Display the amount of time left on the current map.^r^n",
-	"%s %s :%sip - Display the IP of the server.^r^n",
-	"%s %s :%sstatus - Display the status of the server.^r^n"
-}
-
 static irc_help_commands_trailer[][] = {
 	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them.^r^n"
 }
@@ -188,7 +176,25 @@ public irc_cmd_list(message_type[], target[], prefix)
 {
 
 	irc_print_array(irc_help_commands_header,  sizeof(irc_help_commands_header),  message_type, target        );
-	irc_print_array(irc_help_commands       ,  sizeof(irc_help_commands),         message_type, target, prefix);
+
+	for (new i = 0; i < sizeof(irc_commands); i++) {
+		// 2 is the command
+		// 3 is the description
+		if (equali(message_type, IRC_MSG_PRIVMSG))
+			irc_print("%s %s :%s - %s^r^n", message_type,
+			                                target,
+																	    irc_commands[i][2],
+																	    irc_commands[i][3 + strlen(irc_commands[i][2])]
+																	    );
+		else
+			irc_print("%s %s :%c%s - %s^r^n", message_type,
+			                                  target,
+																		    prefix,
+																		    irc_commands[i][2],
+																		    irc_commands[i][3 + strlen(irc_commands[i][2])]
+																		    );
+	}
+
 	if (equali(message_type, IRC_MSG_PRIVMSG))
 	irc_print_array(irc_help_commands_trailer, sizeof(irc_help_commands_trailer), message_type, target        );
 
