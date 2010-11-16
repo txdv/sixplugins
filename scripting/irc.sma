@@ -835,61 +835,92 @@ public sendnext()
 	}
 }
 
+static cmd_irc_commands[][] = {
+	{ "connect",	  "Connects the bot to the server and channel selected by the cvars." },
+	{ "disconnect", "Disconnects the bot from the active server." },
+	{ "say",        "Prints some text in the channel selected by the cvar" },
+	{ "join",       "Attempts to join the default channel" },
+	{ "stats",      "Reports the status of the bot" },
+	{ "help",       "Prints this help message" },
+	{ "identify",   "Sends the bot identification string to the server" }
+}
+
+public cmd_irc_connect(id)
+{
+	irc_connect();
+	console_print(id,"[IRC] Attempting to connect")
+}
+
+public cmd_irc_disconnect(id)
+{
+	irc_quit("");
+	console_print(id,"[IRC] Disconnecting")
+}
+
+public cmd_irc_say2(id)
+{
+	new msg[1024];
+	read_args(msg, sizeof(msg)-1);
+	// ommit "say2 "
+	// strlen("say2 ") == 5
+	irc_print("PRIVMSG %s :%s^r^n", chan, msg[5]);
+}
+
+public cmd_irc_join(id)
+{
+	irc_join_default()
+	console_print(id,"[IRC] Attempting to join %s",chan)
+}
+
+public cmd_irc_stats(id)
+{
+		console_print(id, "[IRC] Status:");
+		console_print(id, "[IRC] cvar port %i, irc_socket %i", get_cvar_num("irc_socket"), irc_socket);
+		console_print(id, "[IRC] internal vars: nick: %s, username: %s, chan: %s, server: %s, port: %i",
+		                  nick, username, chan, server, port);
+		console_print(id, "[IRC] Ping counter at %i, message counter at %i", pings, curmesg);
+}
+
+public cmd_irc_help(id)
+{
+	server_print("[IRC] #irc subcommand - description");
+
+	for (new i = 0; i < sizeof(cmd_irc_commands); i++)
+	{
+		new arg2 = strlen(cmd_irc_commands[i][0]);
+		console_print(id, "[IRC] irc %s - %s", cmd_irc_commands[i][0], cmd_irc_commands[i][arg2+1]);
+	}
+}
+
+public cmd_irc_identify(id)
+{
+	irc_identify()
+	console_print(id,"[IRC] Identifying")
+}
+
 public parseirc(id)
 {
 	if (!(get_user_flags(id)&ACCESS_IRC))
 	{
-		console_print(id,"[IRC] Access Denied")
-		return PLUGIN_HANDLED
+		console_print(id, "[IRC] Access Denied");
+		return PLUGIN_HANDLED;
 	}
-	new arg1[32]
-	read_argv(1,arg1,32)
-	if (equali(arg1,"connect") || equali(arg1,"reconnect"))
+	new subcommand[32];
+	read_argv(1, subcommand, sizeof(subcommand) -1);
+
+	for (new i = 0; i < sizeof(cmd_irc_commands); i++)
 	{
-		irc_connect()
-		console_print(id,"[IRC] Attempting to connect")
-		return PLUGIN_HANDLED
+		if (equali(subcommand, cmd_irc_commands[i][0]))
+		{
+			callfunc_begin(format2("cmd_irc_%s", cmd_irc_commands[i][0]));
+			callfunc_push_int(id);
+			callfunc_end();
+			return PLUGIN_HANDLED;
+		}
 	}
-	else if (equali(arg1,"disconnect"))
-	{
-		irc_quit("");
-		console_print(id,"[IRC] Disconnecting")
-		return PLUGIN_HANDLED
-	}
-	else if (equali(arg1,"say"))
-	{
-		new msg[1024]
-		read_args(msg,32)
-		format(temp,1024,"PRIVMSG %s :%s^r^n",chan,msg[4])
-		additem(temp)
-	}
-	else if (equali(arg1,"join"))
-	{
-		irc_join_default()
-		console_print(id,"[IRC] Attempting to join %s",chan)
-	}
-	else if (equali(arg1,"status"))
-	{
-		console_print(id,"[IRC] Status:")
-		console_print(id,"[IRC] Cvar reports port %i, irc_socket reports %i",get_cvar_num("irc_socket"),irc_socket)
-		console_print(id,"[IRC] Internal vars: Nick: %s/Username: %s/Chan: %s/Server: %s/Port: %i",nick,username,chan,server,port)
-		console_print(id,"[IRC] Ping counter at %i, message counter at %i",pings,curmesg)
-	}
-	else if (equali(arg1,"help"))
-	{
-		console_print(id,"[IRC] For help setting the bot up, connect to irc.gamesurge.net channel #IRCHLDS")
-		console_print(id,"[IRC] DO NOT HAVE THIS BOT CONNECT THERE")
-	}
-	else if (equali(arg1,"ident") || equali(arg1,"identify"))
-	{
-		irc_identify()
-		console_print(id,"[IRC] Identifying")
-	}
-	else
-	{
-		console_print(id,"[IRC] Command not found")
-	}
-	return PLUGIN_HANDLED
+	console_print(id, "[IRC] Error: Uknown command");
+	cmd_irc_help(id);
+	return PLUGIN_HANDLED;
 }
 
 public parsemessage(id, input[], msg[])
