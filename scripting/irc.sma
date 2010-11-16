@@ -498,12 +498,12 @@ public IRC_Init()
 	server_print "HLDS <-> IRC is connecting"
 	set_task(1.0,"irc_datacheck",_,_,_,"b")
 	set_task(0.5,"sendnext",_,_,_,"b")
-	if (get_cvar_num("irc_clientport") == 0)
-		set_task(get_cvar_float("irc_joindelay"),"irc_connect")
+
+	if (!get_cvar_num("irc_clientport"))
+		set_task(get_cvar_float("irc_joindelay"), "irc_connect")
 	else
 		irc_socket = get_cvar_num("irc_clientport")
-	pings = 2
-	set_task(60.0,"checkping",_,_,_,"b")
+
 	get_cvar_string("irc_server",server,64)
 	get_cvar_string("irc_nick",nick,32)
 	get_cvar_string("irc_channel",chan,32)
@@ -577,6 +577,8 @@ public irc_connect()
 		case 3:	{ log_amx("[IRC] Couldn't connect to %s:%i", server, port);     return -3; }
 	}
 
+	pings = 0;
+
 	set_cvar_num("irc_clientport", irc_socket);
 
 	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot^r^n", nick, username);
@@ -590,15 +592,6 @@ public irc_connect()
 	return irc_socket
 }
 
-public checkping()
-{
-	if (!pings)
-	{
-		end();
-		set_task(Float:60.0,"irc_connect");
-		server_print("[IRC] Disconnected by ping timeout, will try to reconnect in 60 seconds");
-	}
-}
 public irc_datacheck()
 {
 	if (socket_change(irc_socket,1))
