@@ -40,7 +40,6 @@ new irc_socket //Connection
 new temp[1024] //Put together messages with this
 new curmesg //Message counter for sending
 new pending[256][1024] //Messages Pending to be sent
-new i //Loop Counter
 new pings //Keep track of pings
 new users[MAX_USERS][31]
 new usersaccess[MAX_USERS]
@@ -802,7 +801,7 @@ public sendnext()
 		socket_send(irc_socket,pending[0],0)
 		if (get_cvar_num("irc_debug") == 1)
 			server_print("[IRC]<- %s",pending[0])
-		for (i=0;i<=curmesg;i++)
+		for (new i=0;i<=curmesg;i++)
 		{
 			copy(pending[i],1024,pending[i+1])
 		}
