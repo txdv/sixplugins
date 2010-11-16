@@ -513,16 +513,17 @@ public IRC_Init()
 	format(accessfile,200,"%s/ircadmins.ini",directory)
 	get_datadir(directory,175)
 	format(loginfile,200,"%s/ircloggedin.list",directory)
-	admin_file()
+	admin_file_create();
 	admin_check()
 }
-public admin_file()
+
+public admin_file_create()
 {
 	if(!file_exists(accessfile))
 	{
-		new writestr[501]
-		format(writestr,500,"HLDS<->IRC Admin Setup File^nTo add admins simply put entries in the form: ^"username^" ^"password^" ^"accesslevel^" ^"unique id^".^nAccess level uses the same levels as users.ini. The unique id is a unique number to identify each admin.^nExample:^"test^" ^"test^" ^"abcdefghijklmnopqrstu^" ^"1337^"")
-		write_file(accessfile,writestr)
+		write_file(accessfile, "# ^"username^" ^"password^" ^"flags^" ^"unique id^"");
+		write_file(accessfile, "# Access level uses the same levels as users.ini. The unique id is a unique number to identify each admin.");
+		write_file(accessfile, "# ^"test^" ^"test^" ^"abcdefghijklmnopqrstu^" ^"1337^"");
 	}
 }
 
