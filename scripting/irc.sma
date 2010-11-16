@@ -1140,7 +1140,7 @@ public irc_admin_logout(adminname[], report)
 
 public admin_commands(name[],command[])
 {
-	//Replace with a command lookup and stuff, you know not a list of fucking commands using containi
+	//Replace with a command lookup and stuff, not a list of commands using containi
 	//new uaccess = is_irc_admin(name)
 	return PLUGIN_CONTINUE
 }
