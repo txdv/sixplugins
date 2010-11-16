@@ -144,6 +144,15 @@ public irc_join_default()
 	irc_join(str_get_cvar("irc_channel"));
 }
 
+public irc_identify()
+{
+	str_get_cvar("irc_identify");
+	if (!strlen(temp))
+		return;
+	irc_print("%s^r^n", temp);
+	return;
+}
+
 irc_print_array(array[][], size, ...)
 {
 	for (new i = 0; i < size; i++)
@@ -826,17 +835,6 @@ public sendnext()
 }
 
 
-public irc_identify()
-{
-	if (get_cvar_num("irc_identify") != 0)
-	{
-		new ident[256]
-		get_cvar_string("irc_ident",ident,256)
-		format(ident,256,"%s^r^n",ident)
-		additem(ident)
-	}
-	return 0
-}
 
 public parseirc(id)
 {
