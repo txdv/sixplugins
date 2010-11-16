@@ -112,7 +112,26 @@ str_get_cvar(cvar[])
 irc_print(string[], ...)
 {
 	vformat(temp, 1024, string, 2);
+	strcat(temp, "^r^n", sizeof(temp)-1);
 	additem(temp);
+}
+
+public irc_msg(message_type[], target[], message[], ...)
+{
+	vformat(temp, sizeof(temp)-1, message, 4);
+	irc_print("%s %s :%s", message_type, target, temp)
+}
+
+public irc_privmsg(target[], message[], ...)
+{
+	vformat(temp, sizeof(temp)-1, message, 3);
+	irc_print("PRIVMSG %s :%s", target, temp)
+}
+
+public irc_notice(target[], message[], ...)
+{
+	vformat(temp, sizeof(temp)-1, message, 3);
+	irc_print("NOTICE %s :%s", target, temp)
 }
 
 public irc_quit(message[])
@@ -126,17 +145,17 @@ public irc_quit(message[])
 
 public irc_pong(target[])
 {
-	irc_print("PONG :%s^r^n", target)
+	irc_print("PONG :%s", target)
 }
 
 public irc_server_status(message_type[], target[])
 {
-	irc_print("%s %s :%s^r^n", message_type, target, get_server_status());
+	irc_print("%s %s :%s", message_type, target, get_server_status());
 }
 
 public irc_join(chan[])
 {
-	irc_print("JOIN %s^r^n", chan);
+	irc_print("JOIN %s", chan);
 }
 
 public irc_join_default()
@@ -147,10 +166,8 @@ public irc_join_default()
 public irc_identify()
 {
 	str_get_cvar("irc_identify");
-	if (!strlen(temp))
-		return;
-	irc_print("%s^r^n", temp);
-	return;
+	if (strlen(temp))
+		irc_print("%s", temp);
 }
 
 irc_print_array(array[][], size, ...)
@@ -177,9 +194,9 @@ irc_is_help_synonym(prefix, string[])
 }
 
 static irc_help_commands_header[][] = {
-	"%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus ^r^n",
-	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):^r^n",
-	"%s %s :cmds / commands / help / info - Display this help.^r^n"
+	"%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus ",
+	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):",
+	"%s %s :cmds / commands / help / info - Display this help."
 }
 
 static irc_commands[][] = {
@@ -204,7 +221,7 @@ public irc_command_fits(command[], prefix)
 }
 
 static irc_help_commands_trailer[][] = {
-	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them.^r^n"
+	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them."
 }
 
 public irc_cmd_list(message_type[], target[], prefix)
@@ -216,18 +233,18 @@ public irc_cmd_list(message_type[], target[], prefix)
 		// 2 is the command
 		// 3 is the description
 		if (equali(message_type, IRC_MSG_PRIVMSG))
-			irc_print("%s %s :%s - %s^r^n", message_type,
-			                                target,
-																	    irc_commands[i][2],
-																	    irc_commands[i][3 + strlen(irc_commands[i][2])]
-																	    );
+			irc_print("%s %s :%s - %s", message_type,
+			                            target,
+															    irc_commands[i][2],
+																	irc_commands[i][3 + strlen(irc_commands[i][2])]
+																	);
 		else
-			irc_print("%s %s :%c%s - %s^r^n", message_type,
-			                                  target,
-																		    prefix,
-																		    irc_commands[i][2],
-																		    irc_commands[i][3 + strlen(irc_commands[i][2])]
-																		    );
+			irc_print("%s %s :%c%s - %s", message_type,
+			                              target,
+																		prefix,
+																		irc_commands[i][2],
+																		irc_commands[i][3 + strlen(irc_commands[i][2])]
+																		);
 	}
 
 	if (equali(message_type, IRC_MSG_PRIVMSG))
@@ -236,7 +253,7 @@ public irc_cmd_list(message_type[], target[], prefix)
 	new adminaccess = is_irc_admin(target)
 	if (adminaccess == -1) return -1;
 
-	irc_print("%s %s :Admin commands available on the server are also available from IRC if you have sufficient access.^r^n",
+	irc_print("%s %s :Admin commands available on the server are also available from IRC if you have sufficient access.",
 						message_type, target);
 
 	return 0;
@@ -247,7 +264,7 @@ public irc_cmd_players(message_type[], target[])
 	new authid[35], uname[32], ip[51], ping, loss;
 	new authid_max = 0, uname_max = 0, ip_max = 0, ping_max = 0, loss_max = 0;
 
-	irc_print("%s %s :Begin Players List^r^n", message_type, target);
+	irc_print("%s %s :Begin Players List", message_type, target);
 
 	for (new i = 0; i < 34; i++)
 	{
@@ -275,7 +292,7 @@ public irc_cmd_players(message_type[], target[])
 		get_user_ip     (i, ip,     50);
 		get_user_ping   (i, ping,   loss);
 
-		irc_print("%s %s :#%d %s%s %s%s %s%s %s%d %s%d^r^n", message_type, target, i,
+		irc_print("%s %s :#%d %s%s %s%s %s%s %s%d %s%d", message_type, target, i,
 					    authid, fill(' ', authid_max - strlen(authid)),
 					    fill(' ', uname_max  - strlen(uname)),  uname,
 					    fill(' ', ip_max     - strlen(ip)),     ip,
@@ -283,13 +300,13 @@ public irc_cmd_players(message_type[], target[])
 					    fill(' ', loss_max   - inttostrlen(loss)),  loss);
 	}
 
-	irc_print("%s %s :End Players List^r^n", message_type, target)
+	irc_print("%s %s :End Players List", message_type, target)
 }
 
 public irc_cmd_login(message_type[], name[], command[], prefix)
 {
-	new usern[31], pass[31], extra[31]
-	parse(command,extra,30,usern,30,pass,30)
+	new usern[32], pass[32], extra[32]
+	parse(command, extra, sizeof(extra)-1, usern, sizeof(usern)-1, pass, sizeof(pass)-1);
 	new retstr[501], irir=0, a=0
 	new bool:userexists = false
 	while(read_file(accessfile,irir,retstr,500,a) != 0)
@@ -365,33 +382,33 @@ public irc_cmd_ip(message_type[], target[])
 {
 	new ip[51];
 	get_user_ip(0, ip, 50);
-	irc_print("%s %s :Server IP: %s^r^n", message_type, target, ip);
+	irc_print("%s %s :Server IP: %s", message_type, target, ip);
 }
 
 public irc_cmd_timeleft(message_type[], target[])
 {
 	new timeleft[26];
 	get_cvar_string("amx_timeleft", timeleft, 25);
-	irc_print("%s %s :Time left: %s^r^n", message_type, target, timeleft);
+	irc_print("%s %s :Time left: %s", message_type, target, timeleft);
 }
 
 public irc_cmd_nextmap(message_type[], target[])
 {
 	new nextmap[51];
 	get_cvar_string("amx_nextmap", nextmap, 50);
-	irc_print("%s %s :next map: %s^r^n", message_type, target, nextmap);
+	irc_print("%s %s :next map: %s", message_type, target, nextmap);
 }
 
 public irc_cmd_map(message_type[], target[])
 {
 	new mapname[51];
 	get_mapname(mapname, 50);
-	irc_print("%s %s :Current map: %s^r^n", message_type, target, mapname);
+	irc_print("%s %s :Current map: %s", message_type, target, mapname);
 }
 
 public irc_cmd_status(message_type[], target[])
 {
-	irc_print("%s %s :%s^r^n", message_type, target, get_server_status());
+	irc_print("%s %s :%s", message_type, target, get_server_status());
 }
 
 irc_handle_commands(name[], command[], priv)
@@ -602,7 +619,7 @@ public irc_connect()
 
 	set_cvar_num("irc_socket", irc_socket);
 
-	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot^r^n", nick, username);
+	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot", nick, username);
 	pings = 2;
 
 	server_print("[IRC] Connected sucessfully");
@@ -863,7 +880,7 @@ public cmd_irc_say2(id)
 	read_args(msg, sizeof(msg)-1);
 	// ommit "say2 "
 	// strlen("say2 ") == 5
-	irc_print("PRIVMSG %s :%s^r^n", chan, msg[5]);
+	irc_print("PRIVMSG %s :%s", chan, msg[5]);
 }
 
 public cmd_irc_join(id)
@@ -986,7 +1003,7 @@ cmd_say_base(id, pub)
 	if (containi(msg,"/admin") != -1)
 	{
 		replace(msg, sizeof(msg)-1, "/admin", ""); // remove the /admin command
-		irc_print("PRIVMSG %s :Admin request by %s. %s^r^n", chan, name, msg);
+		irc_print("PRIVMSG %s :Admin request by %s. %s", chan, name, msg);
 		client_print(id, print_chat, "Your admin request was sent to the channel.");
 		return PLUGIN_HANDLED;
 	}
@@ -1023,7 +1040,7 @@ cmd_say_base(id, pub)
 		formatex(payload, sizeof(payload)-1, "%s%s: %s", payload, name, msg);
 
 
-	irc_print("PRIVMSG %s :<HLDS> %s^r^n", chan, payload);
+	irc_print("PRIVMSG %s :<HLDS> %s", chan, payload);
 	return PLUGIN_CONTINUE;
 }
 
@@ -1036,7 +1053,7 @@ public client_putinserver(id)
 		if (strlen(temp) == 0)
 			return 0;
 
-		irc_print("PRIVMSG %s :%s^r^n", chan, parsemessage(id, temp, ""));
+		irc_print("PRIVMSG %s :%s", chan, parsemessage(id, temp, ""));
 	}
 	return 0
 }
@@ -1050,7 +1067,7 @@ public client_disconnect(id)
 		if (strlen(temp) == 0)
 			return 0;
 
-		irc_print("PRIVMSG %s :%s^r^n", chan, parsemessage(id, temp, ""));
+		irc_print("PRIVMSG %s :%s", chan, parsemessage(id, temp, ""));
 	}
 	return 0
 }
