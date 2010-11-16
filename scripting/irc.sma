@@ -241,11 +241,11 @@ public irc_cmd_players(message_type[], target[])
 		get_user_ping   (i, ping,   loss);
 
 		irc_print("%s %s :#%d %s%s %s%s %s%s %s%d %s%d^r^n", message_type, target, i,
-					 authid, fill(' ', authid_max - strlen(authid)),
-					 fill(' ', uname_max  - strlen(uname)),  uname,
-					 fill(' ', ip_max     - strlen(ip)),     ip,
-					 fill(' ', ping_max   - inttostrlen(ping)), ping,
-					 fill(' ', loss_max   - inttostrlen(loss)),  loss);
+					    authid, fill(' ', authid_max - strlen(authid)),
+					    fill(' ', uname_max  - strlen(uname)),  uname,
+					    fill(' ', ip_max     - strlen(ip)),     ip,
+					    fill(' ', ping_max   - inttostrlen(ping)), ping,
+					    fill(' ', loss_max   - inttostrlen(loss)),  loss);
 	}
 
 	irc_print("%s %s :End Players List^r^n", message_type, target)
