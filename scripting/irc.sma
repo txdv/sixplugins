@@ -305,71 +305,83 @@ public irc_cmd_players(message_type[], target[])
 
 public irc_cmd_login(message_type[], name[], command[], prefix)
 {
-	new usern[32], pass[32], extra[32]
-	parse(command, extra, sizeof(extra)-1, usern, sizeof(usern)-1, pass, sizeof(pass)-1);
-	new retstr[501], irir=0, a=0
-	new bool:userexists = false
-	while(read_file(accessfile,irir,retstr,500,a) != 0)
+	new usern[32], pass[32], extra[32];
+
+	parse(command, extra, sizeof(extra)-1,
+	               usern, sizeof(usern)-1,
+								 pass,  sizeof(pass) -1);
+
+	new retstr[512],
+	    irir = 0, a = 0,
+			bool:userexists = false;
+
+	while (read_file(accessfile, irir, retstr, sizeof(retstr)-1, a))
 	{
 		irir++
-		if(retstr[0] != '"') continue
-		new fuser[31], fpass[31], faccess[31], fid[31]
-		parse(retstr,fuser,30,fpass,30,faccess,30,fid,30)
-		if(equali(usern,fuser))
+		// # is the ommiting character for strings
+		if (retstr[0] == '#') continue;
+		new fuser[32], fpass[32], faccess[32], fid[32];
+
+		parse(retstr, fuser,   sizeof(fuser)   -1,
+		              fpass,   sizeof(fpass)   -1,
+									faccess, sizeof(faccess) -1,
+									fid,     sizeof(fid)     -1);
+
+		server_print(fuser);
+
+		if (!equali(usern, fuser))
+			continue;
+
+		userexists = true;
+
+		if (!equali(pass,fpass))
 		{
-			userexists = true
-			if(equali(pass,fpass))
-			{
-				new fidnum = str_to_num(fid)
-				new bool:there = false
-				for(new inum=0;inum<MAX_USERS;inum++)
-				{
-					if(usersid[inum] == fidnum)
-						there = true
-				}
-				if(!there)
-				{
-					copy(users[curuser],30,name)
-					usersaccess[curuser] = read_flags(faccess)
-					usersid[curuser] = fidnum
-					curuser++
-					format(temp,1024,"PRIVMSG %s :You successfully logged in as %s.^r^n",name,usern)
-					additem(temp)
-					new writestr[101]
-					format(writestr,100,"^"%s^" ^"%s^" ^"%s^"",name,faccess,fid)
-					new nextline = 0
-					new rstr[201], fnum, b
-					while(read_file(loginfile,fnum,rstr,200,b))
-					{
-						if(b <= 0)
-						{
-							nextline = fnum
-							break
-						}
-						fnum++
-					}
-					if(!nextline)
-						write_file(loginfile,writestr)
-					else
-						write_file(loginfile,writestr,nextline)
-				}
-				else
-				{
-					format(temp,1024,"PRIVMSG %s :User %s is already logged in.^r^n",name,usern)
-					additem(temp)
-				}
-			}
-			else
-			{
-				format(temp,1024,"PRIVMSG %s :Invalid username/password combo: %s/%s.^r^n",name,usern,pass)
-				additem(temp)
-			}
+			irc_privmsg(name, "Invalid username/password combo: %s/%s.", usern, pass);
+			return;
 		}
+
+		new fidnum = str_to_num(fid);
+		new bool:there = false;
+		for (new inum=0; inum < MAX_USERS; inum++)
+		{
+			if (usersid[inum] == fidnum) there = true;
+		}
+
+		if (there)
+		{
+			irc_privmsg(name, "User %s is already logged in.", usern);
+			return;
+		}
+
+		copy(users[curuser], 30, name)
+		usersaccess[curuser] = read_flags(faccess);
+		usersid[curuser] = fidnum:
+		curuser++;
+		irc_privmsg(name, "You successfully logged in as %s.", usern);
+
+		new writestr[128];
+		format(writestr, sizeof(writestr)-1, "^"%s^" ^"%s^" ^"%s^"", name, faccess, fid);
+
+		new nextline = 0;
+		new rstr[201], fnum, b;
+		while (read_file(loginfile, fnum, rstr, sizeof(rstr)-1, b))
+		{
+			if (b <= 0)
+			{
+				nextline = fnum;
+				break;
+			}
+			fnum++;
+		}
+		if (!nextline)
+			write_file(loginfile, writestr);
+		else
+			write_file(loginfile, writestr, nextline);
 	}
-	if(!userexists)
+
+	if (!userexists)
 	{
-		format(temp,1024,"PRIVMSG %s :No admin accounts exist with username %s.^r^n",name,usern)
-		additem(temp)
+		irc_privmsg(name, "No admin accounts exist with username ^"%s^"", usern);
 	}
 }
 
