@@ -387,7 +387,7 @@ public irc_cmd_login(message_type[], name[], command[], prefix)
 
 public irc_cmd_logout(message_type[], name[])
 {
-	irc_admin_logout(name, 1)
+	irc_admin_logout(name, 1);
 }
 
 public irc_cmd_ip(message_type[], target[])
@@ -785,38 +785,23 @@ public irc_dataparse(rdata[])
 	}
 	else if(equali(arg2,"NICK"))
 	{
-		new oldname[31], newname[31], tempname[32]
-		copy(newname,30,arg3[1])
-		copyc(tempname,31,arg1,33)
-		copy(oldname,30,tempname[1])
-		trim(oldname)
-		trim(newname)
-		for(new inum=0;inum<MAX_USERS;inum++)
-		{
-			if(equali(users[inum],oldname))
-			{
-				copy(users[inum],30,newname)
-				new retstr[201], jnum, a
-				while(read_file(loginfile,jnum,retstr,200,a) != 0)
-				{
-					new usern[31], uaccess[31], fid[31]
-					parse(retstr,usern,30,uaccess,30,fid,30)
-					if(equali(usern,oldname))
-					{
-						replace(retstr,200,oldname,newname)
-						write_file(loginfile,retstr,jnum)
-					}
-					jnum++
-				}
-			}
-		}
+		new oldname[32], newname[32], tempname[32];
+		copy(newname, sizeof(newname)-1, arg3[1]);
+		copyc(tempname, sizeof(tempname)-1, arg1, sizeof(arg1)-1);
+		copy(oldname, sizeof(oldname)-1, tempname[1]);
+		trim(oldname);
+		trim(newname);
+		admin_changenick(oldname, newname);
 	}
 	else if(equali(arg2,"QUIT"))
 	{
-		new leavename[31], tempname[32]
-		copyc(tempname,31,arg1,33)
-		copy(leavename,30,tempname[1])
-		irc_admin_logout(leavename,0)
+		new leavename[32], tempname[32];
+
+		copyc(tempname, sizeof(tempname)-1,
+		      arg1,     sizeof(arg1)    -1);
+
+		copy(leavename, sizeof(leavename), tempname[1]);
+		irc_admin_logout(leavename, false);
 	}
 	else if (equali(arg1,"ERROR"))
 	{
@@ -826,6 +811,35 @@ public irc_dataparse(rdata[])
 	}
 	return 0;
 }
+
+public admin_changenick(oldname[], newname[])
+{
+	for (new i = 0; i < MAX_USERS; i++)
+	{
+		if(!equali(users[i], oldname))
+			continue;
+
+		copy(users[i], 30, newname);
+		new retstr[200], jnum, a;
+		while (read_file(loginfile, jnum, retstr, sizeof(retstr)-1, a) != 0)
+		{
+			new usern[32], uaccess[32], fid[32];
+			parse(retstr, usern,   sizeof(usern)  -1,
+			              uaccess, sizeof(uaccess)-1,
+			              fid,     sizeof(fid)    -1);
+
+			jnum++;
+
+			if (!equali(usern,oldname))
+				continue;
+
+			replace(retstr, sizeof(retstr)-1, oldname, newname);
+			write_file(loginfile, retstr, jnum);
+		}
+
+	}
+}
+
 public additem(item[])
 {
 	if(curmesg <= 255)
@@ -1112,7 +1126,8 @@ public irc_admin_logout(adminname[], report)
 
 	if (!there)
 	{
-		irc_privmsg(adminname, "You are not logged in as an admin.");
+		if (report)
+			irc_privmsg(adminname, "You are not logged in as an admin.");
 		return PLUGIN_CONTINUE;
 	}
 
