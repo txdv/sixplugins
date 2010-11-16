@@ -114,7 +114,7 @@ irc_print(string[], ...)
 	additem(temp);
 }
 
-public irc_ping(target[])
+public irc_pong(target[])
 {
 	irc_print("PONG :%s^r^n", target)
 }
