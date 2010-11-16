@@ -620,6 +620,19 @@ public irc_datacheck()
 	}
 }
 
+static irc_numeric_events[][] = {
+	{ 403, "No such channel" },
+	{ 405, "Can't join any more channels" },
+	{ 432, "Invalid characters in nickname" },
+	{ 433, "Nickname in use" },
+	{ 437, "Can't change nick, we are in a channel we are banned from" },
+	{ 471, "Limit on channel reached, remove +l and try again" },
+	{ 473, "Channel is +i, invite us in and try again" },
+	{ 474, "We are banned from that channel" },
+	{ 475, "Channel is +k and we don't have the key!" },
+	{ 482, "Can't set modes when we aren't op" }
+}
+
 public irc_dataparse(rdata[])
 {
 	if(strlen(rdata) > 0)
@@ -630,28 +643,38 @@ public irc_dataparse(rdata[])
 		copyc(arg2,128,rdata[arg1len+1],32)
 		arg2len = strlen(arg2)
 		copyc(arg3,128,rdata[arg1len+arg2len+2],32)
-		switch (str_to_num(arg2))
-		{ //Numeric Events
+		new numeric_event = str_to_num(arg2);
+		switch (numeric_event)
+		{
+			// Numeric Events - http://www.faqs.org/rfcs/rfc1459.html
 			case 001:
 			{
 				server_print("[IRC] Connected sucessfully");
-				irc_join_default()
-				set_cvar_num("irc_socket",irc_socket)
-				irc_identify()
+				irc_join_default();
+				set_cvar_num("irc_socket", irc_socket);
+				irc_identify();
 				irc_server_status("PRIVMSG", chan);
-				return 0
-			} //Occurs after successful connection
-			case 403: { server_print("[IRC] Warning: We are not in the channel, but we tried to send a message to it and the channel is empty, channel %s",chan); return 0; }
-			case 405: { server_print("[IRC] Error: Can't join any more channels, the server won't allow it"); return 0; }
-			case 432: { server_print("[IRC] Error: Invalid characters in nickname"); return 0; }
-			case 433: { server_print("[IRC] Error: Nickname in use"); return 0; }
-			case 437: { server_print("[IRC] Error: Can't change nick, we are in a channel we are banned from"); return 0; }
-			case 471: { server_print("[IRC] Error: Limit on channel reached, remove +l and try again"); return 0; }
-			case 473: { server_print("[IRC] Error: Channel is +i, invite us in and try again"); return 0; }
-			case 474: { server_print("[IRC] Error: We are banned from that channel"); return 0; }
-			case 475: { server_print("[IRC] Error: Channel is +k and we don't have the key!"); return 0; }
-			case 482: { server_print("[IRC] Error: Can't set modes when we aren't op"); return 0; }
-			case 513: { server_print("[IRC] Error: Registration failed, try again later"); irc_quit(""); return 0; }
+				return 0;
+			}
+			// Following events occure after successful connection
+			case 513:
+			{
+				server_print("[IRC] Error: Registration failed, try again later");
+				irc_quit("");
+				return 0;
+			}
+			// events with message, but no action
+			default:
+			{
+				for (new i = 0; i < sizeof(irc_numeric_events); i++)
+				{
+					if (irc_numeric_events[i][0] == numeric_event)
+					{
+						server_print("[IRC] Error: %s", irc_numeric_events[i][1]);
+						return 0;
+					}
+				}
+			}
 		}
 
 		if (get_cvar_num("irc_debug"))
