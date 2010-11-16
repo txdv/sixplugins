@@ -555,45 +555,35 @@ public admin_check()
 
 public irc_connect()
 {
-	get_cvar_string("irc_server",server,64)
-	get_cvar_string("irc_nick",nick,32)
-	get_cvar_string("irc_channel",chan,32)
-	get_cvar_string("irc_username",username,32)
-	port = get_cvar_num("irc_port")
-	irc_socket = socket_open(server,port,SOCKET_TCP,error)
-	set_cvar_num("irc_clientport",irc_socket)
+	get_cvar_string("irc_server",   server,   sizeof(server)   -1);
+	get_cvar_string("irc_nick",     nick,     sizeof(nick)     -1);
+	get_cvar_string("irc_channel",  chan,     sizeof(chan)     -1);
+	get_cvar_string("irc_username", username, sizeof(username) -1);
+
+	port = get_cvar_num("irc_port");
+
+	irc_socket = socket_open(server, port, SOCKET_TCP, error);
+
 	switch (error)
 	{
-		case 1:
-		{
-			log_amx("[IRC] Error creating socket to %s:%i",server,port)
-			return -1
-		}
-		case 2:
-		{
-			log_amx("[IRC] Error resolving hostname %s",server)
-			return -2
-		}
-		case 3:
-		{
-			log_amx("[IRC] Couldn't connect to %s:%i",server,port)
-			return -3
-		}
+		case 1: { log_amx("[IRC] Error creating socket to %s:%i",server, port); return -1; }
+		case 2: { log_amx("[IRC] Error resolving hostname %s", server);         return -2; }
+		case 3:	{ log_amx("[IRC] Couldn't connect to %s:%i", server, port);     return -3; }
 	}
-	format(temp,1024,"NICK %s^r^nUSER %s 0 * :HLDS Bot^r^n",nick,username)
-	additem(temp)
-	pings=2
 
+	set_cvar_num("irc_clientport", irc_socket);
+
+	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot^r^n", nick, username);
+	pings = 2;
 
 	server_print("[IRC] Connected sucessfully");
-	irc_join_default()
-	set_cvar_num("irc_clientport",irc_socket)
-	irc_identify()
+	irc_join_default();
+	irc_identify();
 	irc_server_status("PRIVMSG", chan);
-
 
 	return irc_socket
 }
+
 public checkping()
 {
 	if (pings == 0)
