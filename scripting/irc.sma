@@ -587,15 +587,11 @@ public irc_connect()
 
 public checkping()
 {
-	if (pings == 0)
+	if (!pings)
 	{
-		end()
-		set_task(Float:60.0,"irc_connect")
-		server_print("[IRC] Disconnected by ping timeout, will try to reconnect in 60 seconds")
-	}
-	else
-	{
-		pings = 1
+		end();
+		set_task(Float:60.0,"irc_connect");
+		server_print("[IRC] Disconnected by ping timeout, will try to reconnect in 60 seconds");
 	}
 }
 public irc_datacheck()
