@@ -163,15 +163,6 @@ static irc_help_commands_trailer[][] = {
 	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them.^r^n"
 }
 
-
-public irc_cmd_p(message_type[], target[])
-{
-	for (new i = 0; i < sizeof(irc_commands); i++)
-	{
-		irc_print("%s %s :%s%s - %s", message_type, target, "@", irc_commands[i][2], irc_commands[i][3]);
-	}
-}
-
 public irc_cmd_list(message_type[], target[], prefix)
 {
 
