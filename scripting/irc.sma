@@ -175,7 +175,7 @@ public irc_cmd_p(message_type[], target[])
 public irc_cmd_list(message_type[], target[], prefix)
 {
 
-	irc_print_array(irc_help_commands_header,  sizeof(irc_help_commands_header),  message_type, target        );
+	irc_print_array(irc_help_commands_header,  sizeof(irc_help_commands_header),  message_type, target);
 
 	for (new i = 0; i < sizeof(irc_commands); i++) {
 		// 2 is the command
@@ -196,7 +196,7 @@ public irc_cmd_list(message_type[], target[], prefix)
 	}
 
 	if (equali(message_type, IRC_MSG_PRIVMSG))
-	irc_print_array(irc_help_commands_trailer, sizeof(irc_help_commands_trailer), message_type, target        );
+	irc_print_array(irc_help_commands_trailer, sizeof(irc_help_commands_trailer), message_type, target);
 
 	new adminaccess = is_irc_admin(target)
 	if (adminaccess == -1) return -1;
