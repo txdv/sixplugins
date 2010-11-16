@@ -114,6 +114,11 @@ irc_print(string[], ...)
 	additem(temp);
 }
 
+public irc_ping(target[])
+{
+	irc_print("PONG :%s^r^n", target)
+}
+
 public irc_server_status(message_type[], target[])
 {
 	irc_print("%s %s :%s^r^n", message_type, target, get_server_status());
@@ -654,15 +659,13 @@ public irc_dataparse(rdata[])
 			copy(arg2, 32, rdata[contain(rdata, "^r^nPING :")])
 			replace_all(arg2, 32, "^r^nPING :", "");
 			replace_all(arg2, 32, "^r^n", "");
-			format(temp,1024,"PONG :%s^n",arg2)
-			additem(temp)
+			irc_pong(arg2);
 			pings++
 			return 0
 		}
 		else if (equali(arg1,"PING"))
 		{
-			format(temp,1024,"PONG %s^r^n",arg2)
-			additem(temp)
+			irc_pong(arg2);
 			pings++
 			return 0
 		}
