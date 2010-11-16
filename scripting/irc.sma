@@ -107,7 +107,7 @@ str_get_cvar(cvar[])
 // irc functions
 
 #define IRC_MSG_PRIVMSG "PRIVMSG"
-#define IRC_MSG_NOTICE "NOTICE"
+#define IRC_MSG_NOTICE  "NOTICE"
 
 irc_print(string[], ...)
 {
@@ -532,7 +532,7 @@ public IRC_Init()
 	port = get_cvar_num("irc_port")
 
 	if (irc_socket > 0)
-		irc_server_status("PRIVMSG", chan);
+		irc_server_status(IRC_MSG_PRIVMSG, chan);
 
 	new directory[176]
 	get_configsdir(directory,175)
@@ -608,7 +608,7 @@ public irc_connect()
 	server_print("[IRC] Connected sucessfully");
 	irc_join_default();
 	irc_identify();
-	irc_server_status("PRIVMSG", chan);
+	irc_server_status(IRC_MSG_PRIVMSG, chan);
 
 	return irc_socket
 }
@@ -664,7 +664,7 @@ public irc_dataparse(rdata[])
 			irc_join_default();
 			set_cvar_num("irc_socket", irc_socket);
 			irc_identify();
-			irc_server_status("PRIVMSG", chan);
+			irc_server_status(IRC_MSG_PRIVMSG, chan);
 			return 0;
 		}
 		// Following events occure after successful connection
@@ -708,7 +708,7 @@ public irc_dataparse(rdata[])
 		pings++
 		return 0
 	}
-	else if (equali(arg2,"PRIVMSG"))
+	else if (equali(arg2,IRC_MSG_PRIVMSG))
 	{
 		// Username!Ident@Host PRIVMSG Destination :Message
 		new user[32], message[768], frmt[256]
