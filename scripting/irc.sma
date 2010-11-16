@@ -363,30 +363,7 @@ public irc_cmd_map(message_type[], target[])
 
 public irc_cmd_status(message_type[], target[])
 {
-	new cvarstr[801];
-	get_cvar_string("irc_msg_startup", cvarstr, 800);
-
-	if (strlen(cvarstr) > 0)
-	{
-		new mapname[32];
-		new serverip[35];
-		new servername[101];
-		new playerstr[3], maxplayerstr[3];
-
-		get_mapname(mapname, 31);
-		get_user_ip(0, serverip, 34);
-		get_user_name(0, servername, 100);
-		num_to_str(get_playersnum(1), playerstr, 2);
-		num_to_str(get_maxplayers(), maxplayerstr, 2);
-
-		replace(cvarstr, 800, "$maxplayers", maxplayerstr);
-		replace(cvarstr, 800, "$curplayers", playerstr   );
-		replace(cvarstr, 800, "$map",        mapname     );
-		replace(cvarstr, 800, "$ip",         serverip    );
-		replace(cvarstr, 800, "$servername", servername  );
-
-		irc_print("%s %s :%s^r^n", message_type, target, cvarstr);
-	}
+	irc_print("%s %s :%s^r^n", message_type, target, get_server_status());
 }
 
 irc_handle_commands(name[], command[], priv)
@@ -422,6 +399,38 @@ irc_method_missing(name[], command[], priv)
 {
 	new adminaccess = is_irc_admin(name)
 	if (adminaccess != -1) do_command(name, adminaccess, command, (priv ? 0 : 1))
+}
+
+// info formatting functions
+
+public get_server_status()
+{
+	str_get_cvar("irc_msg_startup");
+
+	if (strlen(temp) > 0)
+	{
+		new mapname[32],
+		    serverip[35],
+		    servername[100],
+		    playerstr[3],
+				maxplayerstr[3];
+
+		get_mapname (mapname, sizeof(mapname)-1);
+
+		get_user_ip  (0, serverip,   sizeof(serverip)-1);
+		get_user_name(0, servername, sizeof(servername)-1);
+
+		num_to_str(get_playersnum(1), playerstr,    sizeof(playerstr)-1);
+		num_to_str(get_maxplayers(),  maxplayerstr, sizeof(maxplayerstr)-1);
+
+		replace(temp, sizeof(temp)-1, "$maxplayers", maxplayerstr);
+		replace(temp, sizeof(temp)-1, "$curplayers", playerstr   );
+		replace(temp, sizeof(temp)-1, "$map",        mapname     );
+		replace(temp, sizeof(temp)-1, "$ip",         serverip    );
+		replace(temp, sizeof(temp)-1, "$servername", servername  );
+
+	}
+	return temp;
 }
 
 // main functions
@@ -539,33 +548,13 @@ public admin_check()
 	}
 }
 
-public startup_message(style,name[])
+public startup_message(style, name[])
 {
-	new cvarstr[801]
-	get_cvar_string("irc_msg_startup",cvarstr,800)
-	if(strlen(cvarstr) > 0)
+	switch (style)
 	{
-		new mapname[32]
-		get_mapname(mapname,31)
-		new serverip[35]
-		get_user_ip(0,serverip,34)
-		new servername[101]
-		get_user_name(0,servername,100)
-		new playerstr[3], maxplayerstr[3]
-		num_to_str(get_playersnum(1),playerstr,2)
-		num_to_str(get_maxplayers(),maxplayerstr,2)
-		replace(cvarstr,800,"$maxplayers",maxplayerstr)
-		replace(cvarstr,800,"$curplayers",playerstr)
-		replace(cvarstr,800,"$map",mapname)
-		replace(cvarstr,800,"$ip",serverip)
-		replace(cvarstr,800,"$servername",servername)
-		if(style == 1)
-			format(temp,1024,"PRIVMSG %s :%s^r^n",name,cvarstr)
-		else if(style == 2)
-			format(temp,1024,"NOTICE %s :%s^r^n",name,cvarstr)
-		else
-			format(temp,1024,"PRIVMSG %s :%s^r^n",chan,cvarstr)
-		additem(temp)
+		case 1:  irc_print("PRIVMSG %s: %s^r^n", name, get_server_status());
+		case 2:	 irc_print("NOTICE %s: %s^r^n",  name, get_server_status());
+		default: irc_print("PRIVMSG %s: %s^r^n", chan, get_server_status());
 	}
 }
 
@@ -672,8 +661,9 @@ public irc_dataparse(rdata[])
 			case 482: { server_print("[IRC] Error: Can't set modes when we aren't op"); return 0; }
 			case 513: { server_print("[IRC] Error: Registration failed, try again later"); end(); return 0; }
 		}
-		if (get_cvar_num("irc_debug") == 1)
-			server_print("[IRC]-> %s",rdata)
+
+		if (get_cvar_num("irc_debug"))
+			server_print("[IRC]<- %s", rdata);
 
 
 		if( contain(rdata, "^r^nPING :") > -1 )
@@ -812,8 +802,8 @@ public sendnext()
 	{
 		remove_quotes(pending[0])
 		socket_send(irc_socket,pending[0],0)
-		if (get_cvar_num("irc_debug") == 1)
-			server_print("[IRC]<- %s",pending[0])
+		if (get_cvar_num("irc_debug"))
+			server_print("[IRC]-> %s", pending[0]);
 		for (new i=0;i<=curmesg;i++)
 		{
 			copy(pending[i],1024,pending[i+1])
