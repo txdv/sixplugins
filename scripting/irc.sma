@@ -481,7 +481,7 @@ public plugin_init()
 
 	register_cvar("irc_msg_usecolors","1")
 
-	register_cvar("irc_clientport","0",FCVAR_PROTECTED&FCVAR_UNLOGGED)
+	register_cvar("irc_socket","0",FCVAR_PROTECTED&FCVAR_UNLOGGED)
 
 	// Commands
 	register_concmd("irc","parseirc",0," Type ^"irc help^" for help")
@@ -499,10 +499,10 @@ public IRC_Init()
 	set_task(1.0,"irc_datacheck",_,_,_,"b")
 	set_task(0.5,"sendnext",_,_,_,"b")
 
-	if (!get_cvar_num("irc_clientport"))
+	if (!get_cvar_num("irc_socket"))
 		set_task(get_cvar_float("irc_joindelay"), "irc_connect")
 	else
-		irc_socket = get_cvar_num("irc_clientport")
+		irc_socket = get_cvar_num("irc_socket")
 
 	get_cvar_string("irc_server",server,64)
 	get_cvar_string("irc_nick",nick,32)
@@ -579,7 +579,7 @@ public irc_connect()
 
 	pings = 0;
 
-	set_cvar_num("irc_clientport", irc_socket);
+	set_cvar_num("irc_socket", irc_socket);
 
 	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot^r^n", nick, username);
 	pings = 2;
@@ -624,7 +624,7 @@ public irc_dataparse(rdata[])
 			{
 				server_print("[IRC] Connected sucessfully");
 				irc_join_default()
-				set_cvar_num("irc_clientport",irc_socket)
+				set_cvar_num("irc_socket",irc_socket)
 				irc_identify()
 				irc_server_status("PRIVMSG", chan);
 				return 0
@@ -794,7 +794,7 @@ public end()
 {
 	format(temp,1024,"QUIT : HLDS<->IRC by Devicenull ^r^n")
 	socket_send(irc_socket,temp,0)
-	set_cvar_num("irc_clientport",0)
+	set_cvar_num("irc_socket",0)
 }
 
 public irc_identify()
@@ -845,7 +845,7 @@ public parseirc(id)
 	else if (equali(arg1,"status"))
 	{
 		console_print(id,"[IRC] Status:")
-		console_print(id,"[IRC] Cvar reports port %i, irc_socket reports %i",get_cvar_num("irc_clientport"),irc_socket)
+		console_print(id,"[IRC] Cvar reports port %i, irc_socket reports %i",get_cvar_num("irc_socket"),irc_socket)
 		console_print(id,"[IRC] Internal vars: Nick: %s/Username: %s/Chan: %s/Server: %s/Port: %i",nick,username,chan,server,port)
 		console_print(id,"[IRC] Ping counter at %i, message counter at %i",pings,curmesg)
 	}
