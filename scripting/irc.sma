@@ -455,7 +455,7 @@ irc_handle_commands(name[], command[], priv)
 irc_method_missing(name[], command[], priv)
 {
 	new adminaccess = is_irc_admin(name)
-	if (adminaccess != -1) do_command(name, adminaccess, command, (priv ? 0 : 1))
+	if (adminaccess != -1) do_command(name, adminaccess, command, (priv ? IRC_MSG_PRIVMSG : IRC_MSG_NOTICE));
 }
 
 // info formatting functions
@@ -1160,38 +1160,43 @@ public admin_commands(name[],command[])
 	return PLUGIN_CONTINUE
 }
 
-public do_command(name[],adminaccess,commandstr[],where)
+public do_command(name[], adminaccess, commandstr[], msg_type[])
 {
-	new command[51], parameters[51]
-	strbreak(commandstr,command,50,parameters,50)
-	replace(command,50,"@","")
-	if(equali(command,"amx_rcon"))
+	new command[64], parameters[64];
+
+	strbreak(commandstr, command,    sizeof(command),
+	                     parameters, sizeof(parameters));
+
+	replace(command, sizeof(command)-1, "@", "");
+
+	if (equali(command,"amx_rcon") && (adminaccess & ADMIN_RCON))
 	{
-		if(adminaccess & ADMIN_RCON)
+		server_cmd("%s", parameters);
+		irc_msg(msg_type, name, "Command successful!");
+	}
+
+	// with adminacccess we specify what commands to get
+	new maxconcmds = get_concmdsnum(adminaccess, -1);
+	new rcommand[64], rinfo[64], rflags;
+
+	for (new i = 0; i <= maxconcmds ; i++)
+	{
+		// last option: 0 server commands, + player commands, - all commands
+		get_concmd(i, rcommand, sizeof(rcommand) -1,
+		              rflags,
+									rinfo,    sizeof(rinfo)    -1,
+									adminaccess,
+									-1);
+
+		if (!strlen(rcommand)) break;
+
+		if (equali(command,rcommand))
 		{
-			server_cmd("%s",parameters)
-			if(where)
-				format(temp,1024,"NOTICE %s :Command successful!^r^n",name)
-			else
-				format(temp,1024,"PRIVMSG %s :Command successful!^r^n",name)
+			irc_msg(msg_type, name, "Command successful!");
+			server_cmd("%s %s", command, parameters);
+			return PLUGIN_HANDLED;
 		}
 	}
-	new maxconcmds = get_concmdsnum(adminaccess,-1)
-	new rcommand[51],rflags,rinfo[51]
-	for(new inum=0;inum<=maxconcmds;inum++)
-	{
-		get_concmd(inum,rcommand,50,rflags,rinfo,50,adminaccess,-1)
-		if(strlen(rcommand) <= 0) break;
-		if(equali(command,rcommand))
-		{
-			if(where)
-				format(temp,1024,"NOTICE %s :Command successful!^r^n",name)
-			else
-				format(temp,1024,"PRIVMSG %s :Command successful!^r^n",name)
-			additem(temp)
-			server_cmd("%s %s",command,parameters)
-			break;
-		}
-	}
-	return PLUGIN_HANDLED
+	irc_msg(msg_type, name, "No such command.");
+	return PLUGIN_HANDLED;
 }
