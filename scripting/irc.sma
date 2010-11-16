@@ -97,6 +97,12 @@ string_first_token(str[])
 	return temp;
 }
 
+str_get_cvar(cvar[])
+{
+	get_cvar_string(cvar, temp, sizeof(temp)-1)
+	return temp;
+}
+
 // irc functions
 
 #define IRC_MSG_PRIVMSG "PRIVMSG"
@@ -108,11 +114,21 @@ irc_print(string[], ...)
 	additem(temp);
 }
 
+public irc_join(chan[])
+{
+	irc_print("JOIN %s^r^n", chan);
+}
+
+public irc_join_default()
+{
+	irc_join(str_get_cvar("irc_channel"));
+}
+
 irc_print_array(array[][], size, ...)
 {
 	for (new i = 0; i < size; i++)
 	{
-		vformat(temp, 1024, array[i], 3);
+		vformat(temp, sizeof(temp)-1, array[i], 3);
 		additem(temp);
 	}
 }
@@ -586,7 +602,7 @@ public irc_connect()
 
 
 	server_print("[IRC] Connected sucessfully");
-	irc_joinchannel()
+	irc_join_default()
 	set_cvar_num("irc_clientport",irc_socket)
 	irc_identify()
 	startup_message(0,"")
@@ -638,7 +654,7 @@ public irc_dataparse(rdata[])
 			case 001:
 			{
 				server_print("[IRC] Connected sucessfully");
-				irc_joinchannel()
+				irc_join_default()
 				set_cvar_num("irc_clientport",irc_socket)
 				irc_identify()
 				startup_message(0,"")
@@ -813,14 +829,6 @@ public end()
 	set_cvar_num("irc_clientport",0)
 }
 
-public irc_joinchannel()
-{
-	get_cvar_string("irc_channel",chan,32)
-	format(temp,1024,"JOIN %s^r^n",chan)
-	additem(temp)
-	return 0
-}
-
 public irc_identify()
 {
 	if (get_cvar_num("irc_identify") != 0)
@@ -863,7 +871,7 @@ public parseirc(id)
 	}
 	else if (equali(arg1,"join"))
 	{
-		irc_joinchannel()
+		irc_join_default()
 		console_print(id,"[IRC] Attempting to join %s",chan)
 	}
 	else if (equali(arg1,"status"))
