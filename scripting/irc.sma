@@ -964,9 +964,9 @@ public irc_saytext(id)
 			new team = get_user_team(id)
 			switch(team)
 			{
-				case 1: len += format(finalmessage[len],300-len,"4 %s",name)
-					case 2: len += format(finalmessage[len],300-len,"12 %s",name)
-					default: len += format(finalmessage[len],300-len,"0 %s",name)
+				case 1:  len += format(finalmessage[len],300-len,"04%s", name);
+				case 2:  len += format(finalmessage[len],300-len,"12%s", name);
+				default: len += format(finalmessage[len],300-len,"00%s", name);
 			}
 		}
 		else
@@ -981,21 +981,22 @@ public irc_sayteamtext(id)
 {
 	if (irc_socket > 0)
 	{
-		new msg[1024]
-		read_args(msg,1024)
-		remove_quotes(msg)
-		if(strlen(msg) <= 0)
-			return PLUGIN_CONTINUE
-		new name[32]
-		get_user_name(id,name,31)
-		if(containi(msg,"/admin") != -1)
+		new msg[1024];
+		read_args(msg, sizeof(msg)-1)
+		remove_quotes(msg);
+
+		if(!strlen(msg))
+			return PLUGIN_CONTINUE;
+
+		new name[32];
+		get_user_name(id, name, sizeof(name)-1)
+
+		if (containi(msg,"/admin") != -1)
 		{
-			replace(msg,1024,"/admin","")
-			format(temp,1024,"PRIVMSG %s :Admin request by %s. %s^r^n",chan,name,msg)
-			server_print("TEMP: %s CHAN: %s",temp,chan)
-			additem(temp)
-			client_print(id,print_chat,"Your admin request was sent to the channel.")
-			return PLUGIN_HANDLED
+			replace(msg, sizeof(msg), "/admin", ""); // remove the /admin command
+			irc_print("PRIVMSG %s :Admin request by %s. %s^r^n", chan, name, msg);
+			client_print(id, print_chat,"Your admin request was sent to the channel.");
+			return PLUGIN_HANDLED;
 		}
 		else if(!get_cvar_num("irc_from_hlds_say_auto"))
 		{
@@ -1010,16 +1011,18 @@ public irc_sayteamtext(id)
 		len = format(finalmessage,300,"PRIVMSG %s :<HLDS> ",chan)
 		if(!is_user_alive(id))
 			len += format(finalmessage[len],300-len,"*DEAD* ")
-		new modname[51]
-		get_modname(modname,50)
+
+		new modname[50];
+		get_modname(modname, sizeof(modname)-1);
+
 		if(equali(modname,"cstrike"))
 		{
-			team = get_user_team(id)
+			team = get_user_team(id);
 			switch(team)
 			{
-				case 1: len += format(finalmessage[len],300-len,"(Terrorist)",name)
-					case 2: len += format(finalmessage[len],300-len,"(Counter-Terrorist)",name)
-					default: len += format(finalmessage[len],300-len,"(Spectator)",name)
+				case 1:  len += format(finalmessage[len], 300-len, "(Terrorist)",         name);
+				case 2:  len += format(finalmessage[len], 300-len, "(Counter-Terrorist)", name);
+				default: len += format(finalmessage[len], 300-len, "(Spectator)",         name);
 			}
 		}
 		if(get_cvar_num("irc_msg_usecolors"))
@@ -1027,9 +1030,9 @@ public irc_sayteamtext(id)
 			team = get_user_team(id)
 			switch(team)
 			{
-				case 1: len += format(finalmessage[len],300-len,"4 %s",name)
-					case 2: len += format(finalmessage[len],300-len,"12 %s",name)
-					default: len += format(finalmessage[len],300-len,"0 %s",name)
+				case 1:  len += format(finalmessage[len],300-len,"04%s", name);
+				case 2:  len += format(finalmessage[len],300-len,"12%s", name);
+				default: len += format(finalmessage[len],300-len,"00%s", name);
 			}
 		}
 		else
