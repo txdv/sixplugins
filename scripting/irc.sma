@@ -39,7 +39,6 @@
 #define IRC_CMD_PRIVATE (1<<1)
 #define IRC_CMD_BOTH    (IRC_CMD_PUBLIC | IRC_CMD_PRIVATE)
 
-new server[64], port, nick[32], username[32], chan[32], error // Stuff needed to connect
 new irc_socket //Connection
 new temp[1024] //Put together messages with this
 new curmesg //Message counter for sending
@@ -52,6 +51,14 @@ new curuser = 0
 new accessfile[201]
 new loginfile[201]
 
+// variable functions
+
+get_chan()     { str_get_cvar("irc_channel" ); return temp; }
+get_nick()     { str_get_cvar("irc_nickname"); return temp; }
+get_username() { str_get_cvar("irc_username"); return temp; }
+get_server()   { str_get_cvar("irc_server"  ); return temp; }
+
+get_port()     { return get_cvar_num("irc_port"    ); }
 // helper functions
 
 strcpy(dest[], source[])
@@ -164,7 +171,7 @@ public irc_join(chan[])
 
 public irc_join_default()
 {
-	irc_join(str_get_cvar("irc_channel"));
+	irc_join(get_chan());
 }
 
 public irc_identify()
@@ -556,14 +563,8 @@ public IRC_Init()
 	else
 		irc_socket = get_cvar_num("irc_socket")
 
-	get_cvar_string("irc_server",server,64)
-	get_cvar_string("irc_nick",nick,32)
-	get_cvar_string("irc_channel",chan,32)
-	get_cvar_string("irc_username",username,32)
-	port = get_cvar_num("irc_port")
-
 	if (irc_socket > 0)
-		irc_server_status(IRC_MSG_PRIVMSG, chan);
+		irc_server_status(IRC_MSG_PRIVMSG, get_chan());
 
 	new directory[128];
 	get_configsdir(directory, sizeof(directory)-1);
@@ -613,18 +614,17 @@ public admin_check()
 
 public irc_connect()
 {
-	get_cvar_string("irc_server",   server,   sizeof(server)   -1);
-	get_cvar_string("irc_nick",     nick,     sizeof(nick)     -1);
-	get_cvar_string("irc_channel",  chan,     sizeof(chan)     -1);
-	get_cvar_string("irc_username", username, sizeof(username) -1);
+	new server[64];
+	copy(server, sizeof(server)-1, get_server());
 
-	port = get_cvar_num("irc_port");
+	new port = get_port();
+	new error;
 
 	irc_socket = socket_open(server, port, SOCKET_TCP, error);
 
 	switch (error)
 	{
-		case 1: { log_amx("[IRC] Error creating socket to %s:%i",server, port); return -1; }
+		case 1: { log_amx("[IRC] Error creating socket to %s:%i", server, port); return -1; }
 		case 2: { log_amx("[IRC] Error resolving hostname %s", server);         return -2; }
 		case 3:	{ log_amx("[IRC] Couldn't connect to %s:%i", server, port);     return -3; }
 	}
@@ -633,13 +633,13 @@ public irc_connect()
 
 	set_cvar_num("irc_socket", irc_socket);
 
-	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot", nick, username);
+	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot", get_nick(), get_username());
 	pings = 2;
 
 	server_print("[IRC] Connected sucessfully");
 	irc_join_default();
 	irc_identify();
-	irc_server_status(IRC_MSG_PRIVMSG, chan);
+	irc_server_status(IRC_MSG_PRIVMSG, get_chan());
 
 	return irc_socket
 }
@@ -738,7 +738,7 @@ public irc_parse(raw[])
 			irc_join_default();
 			set_cvar_num("irc_socket", irc_socket);
 			irc_identify();
-			irc_server_status(IRC_MSG_PRIVMSG, chan);
+			irc_server_status(IRC_MSG_PRIVMSG, get_chan());
 			return;
 		}
 		// Following events occure after successful connection
@@ -789,16 +789,16 @@ public irc_parse(raw[])
 
 on_privmsg(target[], pnick[], message[])
 {
-	if (equali(target, chan))
+	if (equali(target, get_chan()))
 		irc_handle_commands(pnick, message, 0);
 	else
 		irc_handle_commands(pnick, message, 1);
 
 	new frmt[256];
-	if (equali(target, chan))
+	if (equali(target, get_chan()))
 	{
 		if (get_cvar_num("irc_prefix"))
-			format(frmt,256,"%s@%s <%s> %s", target, server, pnick, message);
+			format(frmt,256,"%s@%s <%s> %s", target, get_server(), pnick, message);
 		else
 			format(frmt,256,"*IRC* <%s> %s", pnick, message);
 
@@ -857,20 +857,20 @@ public additem(item[])
 {
 	if(curmesg <= 255)
 	{
-		copy(pending[curmesg],1024,item)
-		curmesg++
+		copy(pending[curmesg], 1024, item);
+		curmesg++;
 	}
 	else
 	{
-		new quicksend[201]
-		format(quicksend,200,"PRIVMSG %s :IRC message overflow, clearing stack.^r^n",chan)
-		socket_send(irc_socket,quicksend,0)
+		new quicksend[256];
+		format(quicksend, sizeof(quicksend)-1, "PRIVMSG %s :IRC message overflow, clearing stack.^r^n", get_chan());
+		socket_send(irc_socket, quicksend, 0);
 		log_amx("IRC Message Stack Overflow...Clearing...")
-		for(new inum=0;inum<256;inum++)
+		for(new i = 0; i < 256;i++)
 		{
-			copy(pending[inum],1024,"")
+			copy(pending[i], 1024," ");
 		}
-		curmesg = 0
+		curmesg = 0;
 	}
 	return 0
 }
@@ -919,13 +919,13 @@ public cmd_irc_say(id)
 	read_args(msg, sizeof(msg)-1);
 	// ommit "say "
 	// strlen("say ") == 4
-	irc_privmsg(chan, msg[4]);
+	irc_privmsg(get_chan(), msg[4]);
 }
 
 public cmd_irc_join(id)
 {
-	irc_join_default()
-	console_print(id,"[IRC] Attempting to join %s",chan)
+	irc_join_default();
+	console_print(id,"[IRC] Attempting to join %s", get_chan());
 }
 
 public cmd_irc_stats(id)
@@ -933,7 +933,7 @@ public cmd_irc_stats(id)
 		console_print(id, "[IRC] Status:");
 		console_print(id, "[IRC] cvar port %i, irc_socket %i", get_cvar_num("irc_socket"), irc_socket);
 		console_print(id, "[IRC] internal vars: nick: %s, username: %s, chan: %s, server: %s, port: %i",
-		                  nick, username, chan, server, port);
+		                  get_nick(), get_username(), get_chan(), get_server(), get_port());
 		console_print(id, "[IRC] Ping counter at %i, message counter at %i", pings, curmesg);
 }
 
@@ -1042,7 +1042,7 @@ cmd_say_base(id, pub)
 	if (containi(msg,"/admin") != -1)
 	{
 		replace(msg, sizeof(msg)-1, "/admin", ""); // remove the /admin command
-		irc_privmsg(chan, "Admin request by %s. %s", name, msg);
+		irc_privmsg(get_chan(), "Admin request by %s. %s", name, msg);
 		client_print(id, print_chat, "Your admin request was sent to the channel.");
 		return PLUGIN_HANDLED;
 	}
@@ -1079,7 +1079,7 @@ cmd_say_base(id, pub)
 		formatex(payload, sizeof(payload)-1, "%s%s: %s", payload, name, msg);
 
 
-	irc_privmsg(chan, "<HLDS> %s", payload);
+	irc_privmsg(get_chan(), "<HLDS> %s", payload);
 	return PLUGIN_CONTINUE;
 }
 
@@ -1092,7 +1092,7 @@ public client_putinserver(id)
 		if (strlen(temp) == 0)
 			return 0;
 
-		irc_privmsg(chan, parsemessage(id, temp, ""));
+		irc_privmsg(get_chan(), parsemessage(id, temp, ""));
 	}
 	return 0
 }
@@ -1106,7 +1106,7 @@ public client_disconnect(id)
 		if (strlen(temp) == 0)
 			return 0;
 
-		irc_privmsg(chan, parsemessage(id, temp, ""));
+		irc_privmsg(get_chan(), parsemessage(id, temp, ""));
 	}
 	return 0
 }
