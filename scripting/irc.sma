@@ -176,7 +176,7 @@ public irc_join_default()
 
 public irc_identify()
 {
-	str_get_cvar("irc_identify");
+	str_get_cvar("irc_ident");
 	if (strlen(temp))
 		irc_print("%s", temp);
 }
