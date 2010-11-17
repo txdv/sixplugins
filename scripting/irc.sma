@@ -401,29 +401,29 @@ public irc_cmd_logout(message_type[], name[])
 
 public irc_cmd_ip(message_type[], target[])
 {
-	new ip[51];
-	get_user_ip(0, ip, 50);
+	new ip[64];
+	get_user_ip(0, ip, sizeof(ip)-1);
 	irc_print("%s %s :Server IP: %s", message_type, target, ip);
 }
 
 public irc_cmd_timeleft(message_type[], target[])
 {
-	new timeleft[26];
-	get_cvar_string("amx_timeleft", timeleft, 25);
+	new timeleft[32];
+	get_cvar_string("amx_timeleft", timeleft, sizeof(timeleft)-1);
 	irc_print("%s %s :Time left: %s", message_type, target, timeleft);
 }
 
 public irc_cmd_nextmap(message_type[], target[])
 {
-	new nextmap[51];
-	get_cvar_string("amx_nextmap", nextmap, 50);
+	new nextmap[64];
+	get_cvar_string("amx_nextmap", nextmap, sizeof(nextmap)-1);
 	irc_print("%s %s :next map: %s", message_type, target, nextmap);
 }
 
 public irc_cmd_map(message_type[], target[])
 {
-	new mapname[51];
-	get_mapname(mapname, 50);
+	new mapname[64];
+	get_mapname(mapname, sizeof(mapname)-1);
 	irc_print("%s %s :Current map: %s", message_type, target, mapname);
 }
 
