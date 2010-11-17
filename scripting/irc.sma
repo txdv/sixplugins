@@ -26,6 +26,7 @@
 #include <amxmisc>
 #include <engine>
 #include <sockets>
+#include <regex>
 
 #pragma dynamic 9000
 
@@ -329,8 +330,6 @@ public irc_cmd_login(message_type[], name[], command[], prefix)
 		              fpass,   sizeof(fpass)   -1,
 									faccess, sizeof(faccess) -1,
 									fid,     sizeof(fid)     -1);
-
-		server_print(fuser);
 
 		if (!equali(usern, fuser))
 			continue;
@@ -647,17 +646,19 @@ public irc_connect()
 
 public irc_datacheck()
 {
-	if (socket_change(irc_socket,1))
+	if (!socket_change(irc_socket, 1))
+		return;
+
+	new data[1024];
+	socket_recv(irc_socket, data, sizeof(data)-1);
+
+	while (strtok(data, temp, sizeof(temp)-1, data, sizeof(data)-1, 10))
 	{
-		new rdata[1024] //, data[1024]
-		socket_recv(irc_socket,rdata,1024)
-		copyc(rdata,1024,rdata,10)
-		irc_dataparse(rdata)
-		copy(temp,1024,rdata[strlen(rdata)+1])
-		if (containi(temp,"^r"))
-		{
-			irc_dataparse(rdata[strlen(rdata)+1])
-		}
+		new left = strlen(temp);
+		if (!left) break;
+
+		temp[left-1] = 0; // delete ^r
+		irc_parse(temp);
 	}
 }
 
@@ -674,19 +675,60 @@ static irc_numeric_events[][] = {
 	{ 482, "Can't set modes when we aren't op" }
 }
 
-public irc_dataparse(rdata[])
+public irc_parse(raw[])
 {
-	if (!strlen(rdata))
-		return 0;
+	if (!strlen(raw))
+		return;
 
-	//If there is data
-	new arg1[128],arg1len,arg2[128] ,arg2len, arg3[128]
-	copyc(arg1,128,rdata,32)
-	arg1len = strlen(arg1)
-	copyc(arg2,128,rdata[arg1len+1],32)
-	arg2len = strlen(arg2)
-	copyc(arg3,128,rdata[arg1len+arg2len+2],32)
-	new numeric_event = str_to_num(arg2);
+	if (get_cvar_num("irc_debug"))
+		server_print("[IRC]<- %s", raw);
+
+	new Regex:id,
+	    err[512], errlen,
+	    ret;
+
+	id = regex_match(raw, "(^^:(\S+) )?(\S+)(.*)", ret, err, errlen);
+
+	new prefix    [128],
+	    command   [128],
+	    raw_params[128];
+
+	regex_substr(id, 2, prefix,     sizeof(prefix)    -1);
+	regex_substr(id, 3, command,    sizeof(command)   -1);
+	regex_substr(id, 4, raw_params, sizeof(raw_params)-1);
+	regex_free(id);
+
+	id = regex_match(raw_params, "(?:^^:| :)(.*)$", ret, err, errlen);
+	new arg1[128],
+	    target[128];
+
+	if (id > 0)
+	{
+		regex_substr(id, 1, arg1, sizeof(arg1)-1);
+		regex_free(id);
+		trim(raw_params);
+		strtok(raw_params, target, sizeof(target)-1, raw_params, sizeof(raw_params)-1, ' ');
+	}
+	else
+	{
+		trim(raw_params);
+		strtok(raw_params, arg1, sizeof(arg1)-1, raw_params, sizeof(raw_params)-1, ' ');
+	}
+
+	new pnick[128],
+	    puser[128],
+	    phost[128];
+
+	id = regex_match(prefix, "^^(\S+)!(\S+)@(\S+)$", ret, err, errlen);
+	if (id > 0)
+	{
+		regex_substr(id, 1, pnick, sizeof(pnick)-1);
+		regex_substr(id, 2, puser, sizeof(puser)-1);
+		regex_substr(id, 3, phost, sizeof(phost)-1);
+		regex_free(id);
+	}
+
+	new numeric_event = str_to_num(command);
 	switch (numeric_event)
 	{
 		// Numeric Events - http://www.faqs.org/rfcs/rfc1459.html
@@ -697,14 +739,14 @@ public irc_dataparse(rdata[])
 			set_cvar_num("irc_socket", irc_socket);
 			irc_identify();
 			irc_server_status(IRC_MSG_PRIVMSG, chan);
-			return 0;
+			return;
 		}
 		// Following events occure after successful connection
 		case 513:
 		{
 			server_print("[IRC] Error: Registration failed, try again later");
 			irc_quit("");
-			return 0;
+			return;
 		}
 		// events with message, but no action
 		default:
@@ -714,108 +756,66 @@ public irc_dataparse(rdata[])
 				if (irc_numeric_events[i][0] == numeric_event)
 				{
 					server_print("[IRC] Error: %s", irc_numeric_events[i][1]);
-					return 0;
+					return;
 				}
 			}
 		}
 	}
 
-	if (get_cvar_num("irc_debug"))
-		server_print("[IRC]<- %s", rdata);
-
-
-	if( contain(rdata, "^r^nPING :") > -1 )
+	if (equali(command, "PING"))
 	{
-		new arg2[33];
-		copy(arg2, 32, rdata[contain(rdata, "^r^nPING :")])
-		replace_all(arg2, 32, "^r^nPING :", "");
-		replace_all(arg2, 32, "^r^n", "");
-		irc_pong(arg2);
-		pings++
-		return 0
+		irc_pong(arg1);
+		pings++;
 	}
-	else if (equali(arg1,"PING"))
+	else if (equali(command, "NICK"))
 	{
-		irc_pong(arg2);
-		pings++
-		return 0
+		on_nick(pnick, arg1);
 	}
-	else if (equali(arg2,IRC_MSG_PRIVMSG))
+	else if (equali(command, "QUIT"))
 	{
-		// Username!Ident@Host PRIVMSG Destination :Message
-		new user[32], message[768], frmt[256]
-		new arg123len
-		copyc(user,32,arg1[1],33) //Get the username out of arg1
-		arg123len = strlen(arg1) + 1 + strlen(arg2) + 1 + strlen(arg3) + 1
-		copy(message,768,rdata[arg123len])
-		copyc(message,768,message,13)
-		new truemessage[768]
-		copy(truemessage,768,message[1])
-		if(equali(arg3,chan))
-		{
-			//channel_commands(user, truemessage)
-			irc_handle_commands(user, truemessage, 0);
-		}
-		else {
-			//private_commands(user, truemessage)
-			irc_handle_commands(user, truemessage, 1);
-		}
-		if(is_irc_admin(user) != -1)
-			admin_commands(user, truemessage)
-		if (equali(arg3,chan))
-		{
-			new firstword[128]
-			copyc(firstword,128,message[1],44)
-			// Its a message that should go to the server
-			if (get_cvar_num("irc_prefix"))
-				format(frmt,256,"%s@%s <%s> %s",chan,server,user,message[1])
-			else
-				format(frmt,256,"*IRC* <%s> %s",user,message[1])
-			if(!get_cvar_num("irc_to_hlds_say_auto"))
-			{
-				new activator[26]
-				get_cvar_string("irc_to_hlds_say_activator",activator,25)
-				if(containi(frmt,activator) == -1)
-					return 0
-				else
-				{
-					replace(frmt,256,activator,"")
-				}
-			}
-			client_print(0,print_chat,"%s",frmt)
-			return 0
-		}
+		on_quit(pnick, arg1);
 	}
-	else if(equali(arg2,"NICK"))
-	{
-		new oldname[32], newname[32], tempname[32];
-		copy(newname, sizeof(newname)-1, arg3[1]);
-		copyc(tempname, sizeof(tempname)-1, arg1, sizeof(arg1)-1);
-		copy(oldname, sizeof(oldname)-1, tempname[1]);
-		trim(oldname);
-		trim(newname);
-		on_nick(oldname, newname);
-	}
-	else if(equali(arg2,"QUIT"))
-	{
-		new leavename[32], tempname[32];
-
-		copyc(tempname, sizeof(tempname)-1,
-		      arg1,     sizeof(arg1)    -1);
-
-		copy(leavename, sizeof(leavename), tempname[1]);
-		on_quit(leavename);
-	}
-	else if (equali(arg1,"ERROR"))
+	else if (equali(command, "ERROR"))
 	{
 		irc_quit("");
-		server_print("[IRC] Disconnected, trying to reconnect")
-		set_task(Float:60,"irc_connect")
+		server_print("[IRC] Disconnected, trying to reconnect");
+		set_task(60.0, "irc_connect");
 	}
-	return 0;
+	else if (equali(command, "PRIVMSG"))
+	{
+		on_privmsg(target, pnick, arg1);
+	}
 }
 
-public on_quit(leavename[])
+on_privmsg(target[], pnick[], message[])
+{
+	if (equali(target, chan))
+		irc_handle_commands(pnick, message, 0);
+	else
+		irc_handle_commands(pnick, message, 1);
+
+	new frmt[256];
+	if (equali(target, chan))
+	{
+		if (get_cvar_num("irc_prefix"))
+			format(frmt,256,"%s@%s <%s> %s", target, server, pnick, message);
+		else
+			format(frmt,256,"*IRC* <%s> %s", pnick, message);
+
+		if(!get_cvar_num("irc_to_hlds_say_auto"))
+		{
+			new activator[26]
+			get_cvar_string("irc_to_hlds_say_activator", activator, 25)
+			if (containi(frmt,activator) == -1)
+				return
+			else
+				replace(frmt, 256, activator, "")
+		}
+		client_print(0, print_chat, "%s", frmt)
+	}
+}
+
+public on_quit(leavename[], message[])
 {
 	irc_admin_logout(leavename, false);
 }
@@ -1179,13 +1179,6 @@ public irc_admin_logout(adminname[], report)
 		irc_privmsg(adminname, "You have logged out.");
 
 	return PLUGIN_CONTINUE;
-}
-
-public admin_commands(name[],command[])
-{
-	//Replace with a command lookup and stuff, not a list of commands using containi
-	//new uaccess = is_irc_admin(name)
-	return PLUGIN_CONTINUE
 }
 
 public do_command(name[], adminaccess, commandstr[], msg_type[])
