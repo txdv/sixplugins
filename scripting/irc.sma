@@ -54,7 +54,7 @@ new loginfile[201]
 // variable functions
 
 get_chan()     { str_get_cvar("irc_channel" ); return temp; }
-get_nick()     { str_get_cvar("irc_nickname"); return temp; }
+get_nick()     { str_get_cvar("irc_nick"); return temp; }
 get_username() { str_get_cvar("irc_username"); return temp; }
 get_server()   { str_get_cvar("irc_server"  ); return temp; }
 
