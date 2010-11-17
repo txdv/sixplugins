@@ -1,21 +1,24 @@
-/*This plugin is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as
-*published by Devicenull, twistedeuphoria and {NM}JRBLOODMIST and Feffe; either version 2 of the License, or (at your option) any later version.
-*This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-*warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-*for more details. You should have received a copy of the GNU General Public License along with this program; if not,
-*write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+                    Version 2, December 2004
 
-Version 2.4
--Added @tsay/@csay/@chat/@psay commands
-Version 2.3
--Added more irc_from_hlds_say activators
-Version 2.2
--Added integration with amxbans
-Version 2.1
--Added the amx_ban feature
--Added bolds to usernames
-Version 2.0
--Changed the bot commands such as !ip to show in the channel.
+ Copyright (C) 2010 Andrius Bentkus <andrius.bentkus@gmail.com>
+
+ Everyone is permitted to copy and distribute verbatim or modified
+ copies of this license document, and changing it is allowed as long
+ as the name is changed.
+
+            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+  0. You just DO WHAT THE FUCK YOU WANT TO
+
+
+ Further notice:
+  The codebase was picked up from IRC<-->HLDS, which was published by
+  twistedeuphoria and {NM}JRBLOODMIST and Feffe.
+  I asked the original author if I can use it as my own plugin and he agreed,
+  since I have rewritten the the entire code base and removed almost all the uglyness.
 
 */
 
