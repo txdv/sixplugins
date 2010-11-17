@@ -1,21 +1,24 @@
-/*This plugin is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as
-*published by Devicenull, twistedeuphoria and {NM}JRBLOODMIST and Feffe; either version 2 of the License, or (at your option) any later version.
-*This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-*warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-*for more details. You should have received a copy of the GNU General Public License along with this program; if not,
-*write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+                    Version 2, December 2004
 
-Version 2.4
--Added @tsay/@csay/@chat/@psay commands
-Version 2.3
--Added more irc_from_hlds_say activators
-Version 2.2
--Added integration with amxbans
-Version 2.1
--Added the amx_ban feature
--Added bolds to usernames
-Version 2.0
--Changed the bot commands such as !ip to show in the channel.
+ Copyright (C) 2010 Andrius Bentkus <andrius.bentkus@gmail.com>
+
+ Everyone is permitted to copy and distribute verbatim or modified
+ copies of this license document, and changing it is allowed as long
+ as the name is changed.
+
+            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+  0. You just DO WHAT THE FUCK YOU WANT TO
+
+
+ Further notice:
+  The codebase was picked up from IRC<-->HLDS, which was published by
+  twistedeuphoria and {NM}JRBLOODMIST and Feffe.
+  I asked the original author if I can use it as my own plugin and he agreed,
+  since I have rewritten the the entire code base and removed almost all the uglyness.
 
 */
 
@@ -23,6 +26,7 @@ Version 2.0
 #include <amxmisc>
 #include <engine>
 #include <sockets>
+#include <regex>
 
 #pragma dynamic 9000
 
@@ -35,12 +39,10 @@ Version 2.0
 #define IRC_CMD_PRIVATE (1<<1)
 #define IRC_CMD_BOTH    (IRC_CMD_PUBLIC | IRC_CMD_PRIVATE)
 
-new server[64], port, nick[32], username[32], chan[32], error // Stuff needed to connect
 new irc_socket //Connection
 new temp[1024] //Put together messages with this
 new curmesg //Message counter for sending
 new pending[256][1024] //Messages Pending to be sent
-new i //Loop Counter
 new pings //Keep track of pings
 new users[MAX_USERS][31]
 new usersaccess[MAX_USERS]
@@ -49,6 +51,14 @@ new curuser = 0
 new accessfile[201]
 new loginfile[201]
 
+// variable functions
+
+get_chan()     { str_get_cvar("irc_channel" ); return temp; }
+get_nick()     { str_get_cvar("irc_nickname"); return temp; }
+get_username() { str_get_cvar("irc_username"); return temp; }
+get_server()   { str_get_cvar("irc_server"  ); return temp; }
+
+get_port()     { return get_cvar_num("irc_port"    ); }
 // helper functions
 
 strcpy(dest[], source[])
@@ -74,6 +84,7 @@ fill(character, count)
 format2(string[], ...)
 {
 	vformat(temp, 1024, string, 2);
+
 	return temp;
 }
 
@@ -98,22 +109,83 @@ string_first_token(str[])
 	return temp;
 }
 
+str_get_cvar(cvar[])
+{
+	get_cvar_string(cvar, temp, sizeof(temp)-1)
+	return temp;
+}
+
 // irc functions
 
 #define IRC_MSG_PRIVMSG "PRIVMSG"
-#define IRC_MSG_NOTICE "NOTICE"
+#define IRC_MSG_NOTICE  "NOTICE"
 
 irc_print(string[], ...)
 {
 	vformat(temp, 1024, string, 2);
+	strcat(temp, "^r^n", sizeof(temp)-1);
 	additem(temp);
+}
+
+public irc_msg(message_type[], target[], message[], ...)
+{
+	vformat(temp, sizeof(temp)-1, message, 4);
+	irc_print("%s %s :%s", message_type, target, temp)
+}
+
+public irc_privmsg(target[], message[], ...)
+{
+	vformat(temp, sizeof(temp)-1, message, 3);
+	irc_print("PRIVMSG %s :%s", target, temp)
+}
+
+public irc_notice(target[], message[], ...)
+{
+	vformat(temp, sizeof(temp)-1, message, 3);
+	irc_print("NOTICE %s :%s", target, temp)
+}
+
+public irc_quit(message[])
+{
+	format(temp, sizeof(temp)-1,"QUIT :%s ^r^n", message);
+	socket_send(irc_socket, temp, 0);
+	socket_close(irc_socket);
+	irc_socket = 0;
+	set_cvar_num("irc_socket", 0);
+}
+
+public irc_pong(target[])
+{
+	irc_print("PONG :%s", target)
+}
+
+public irc_server_status(message_type[], target[])
+{
+	irc_print("%s %s :%s", message_type, target, get_server_status());
+}
+
+public irc_join(chan[])
+{
+	irc_print("JOIN %s", chan);
+}
+
+public irc_join_default()
+{
+	irc_join(get_chan());
+}
+
+public irc_identify()
+{
+	str_get_cvar("irc_identify");
+	if (strlen(temp))
+		irc_print("%s", temp);
 }
 
 irc_print_array(array[][], size, ...)
 {
 	for (new i = 0; i < size; i++)
 	{
-		vformat(temp, 1024, array[i], 3);
+		vformat(temp, sizeof(temp)-1, array[i], 3);
 		additem(temp);
 	}
 }
@@ -132,16 +204,15 @@ irc_is_help_synonym(prefix, string[])
 	return false;
 }
 
-static irc_help_commands_header[][] =
-{
-	"%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus ^r^n",
-	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):^r^n",
-	"%s %s :cmds / commands / help / info - Display this help.^r^n"
+static irc_help_commands_header[][] = {
+	"%s %s :hldsirc - written by Andrius Bentkus",
+	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):",
+	"%s %s :cmds / commands / help / info - Display this help."
 }
 
 static irc_commands[][] = {
-	{ IRC_CMD_PRIVATE, 2, "login" ,   "Log into HLDS<->IRC as an admin.", "username", "password" },
-	{ IRC_CMD_PRIVATE, 0, "logout",   "Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC. " },
+	{ IRC_CMD_PRIVATE, 2, "login" ,   "Log into hldsirc as an admin.", "username", "password" },
+	{ IRC_CMD_PRIVATE, 0, "logout",   "Log out of hldsirc admin. You will automatically be logged out if you quit IRC. " },
 	{ IRC_CMD_BOTH,    0, "players",  "List the users currently on the server." },
 	{ IRC_CMD_BOTH,    0, "map",      "Display the currently played map." },
 	{ IRC_CMD_BOTH,    0, "nextmap",  "Display the next map in the map cycle." },
@@ -160,43 +231,40 @@ public irc_command_fits(command[], prefix)
 	return -1;
 }
 
-static irc_help_commands[][] =
-{
-	"%s %s :%splayers - List the users currently on the server.^r^n",
-	"%s %s :%slogin <username> <password> - Log into HLDS<->IRC as an admin.  This may only be PMed to this bot.^r^n",
-	"%s %s :%slogout - Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC. This may only be PMed to this bot.^r^n",
-	"%s %s :%smap - Display the currently played map.^r^n",
-	"%s %s :%snextmap - Display the next map in the map cycle.^r^n",
-	"%s %s :%stimeleft - Display the amount of time left on the current map.^r^n",
-	"%s %s :%sip - Display the IP of the server.^r^n",
-	"%s %s :%sstatus - Display the status of the server.^r^n"
-}
-
 static irc_help_commands_trailer[][] = {
-	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them.^r^n"
-}
-
-
-public irc_cmd_p(message_type[], target[])
-{
-	for (new i = 0; i < sizeof(irc_commands); i++)
-	{
-		irc_print("%s %s :%s%s - %s", message_type, target, "@", irc_commands[i][2], irc_commands[i][3]);
-	}
+	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them."
 }
 
 public irc_cmd_list(message_type[], target[], prefix)
 {
 
-	irc_print_array(irc_help_commands_header,  sizeof(irc_help_commands_header),  message_type, target        );
-	irc_print_array(irc_help_commands       ,  sizeof(irc_help_commands),         message_type, target, prefix);
+	irc_print_array(irc_help_commands_header,  sizeof(irc_help_commands_header),  message_type, target);
+
+	for (new i = 0; i < sizeof(irc_commands); i++) {
+		// 2 is the command
+		// 3 is the description
+		if (equali(message_type, IRC_MSG_PRIVMSG))
+			irc_print("%s %s :%s - %s", message_type,
+			                            target,
+															    irc_commands[i][2],
+																	irc_commands[i][3 + strlen(irc_commands[i][2])]
+																	);
+		else
+			irc_print("%s %s :%c%s - %s", message_type,
+			                              target,
+																		prefix,
+																		irc_commands[i][2],
+																		irc_commands[i][3 + strlen(irc_commands[i][2])]
+																		);
+	}
+
 	if (equali(message_type, IRC_MSG_PRIVMSG))
-	irc_print_array(irc_help_commands_trailer, sizeof(irc_help_commands_trailer), message_type, target        );
+	irc_print_array(irc_help_commands_trailer, sizeof(irc_help_commands_trailer), message_type, target);
 
 	new adminaccess = is_irc_admin(target)
 	if (adminaccess == -1) return -1;
 
-	irc_print("%s %s :Admin commands available on the server are also available from IRC if you have sufficient access.^r^n",
+	irc_print("%s %s :Admin commands available on the server are also available from IRC if you have sufficient access.",
 						message_type, target);
 
 	return 0;
@@ -207,7 +275,7 @@ public irc_cmd_players(message_type[], target[])
 	new authid[35], uname[32], ip[51], ping, loss;
 	new authid_max = 0, uname_max = 0, ip_max = 0, ping_max = 0, loss_max = 0;
 
-	irc_print("%s %s :Begin Players List^r^n", message_type, target);
+	irc_print("%s %s :Begin Players List", message_type, target);
 
 	for (new i = 0; i < 34; i++)
 	{
@@ -235,146 +303,133 @@ public irc_cmd_players(message_type[], target[])
 		get_user_ip     (i, ip,     50);
 		get_user_ping   (i, ping,   loss);
 
-		irc_print("%s %s :#%d %s%s %s%s %s%s %s%d %s%d^r^n", message_type, target, i,
-					 authid, fill(' ', authid_max - strlen(authid)),
-					 fill(' ', uname_max  - strlen(uname)),  uname,
-					 fill(' ', ip_max     - strlen(ip)),     ip,
-					 fill(' ', ping_max   - inttostrlen(ping)), ping,
-					 fill(' ', loss_max   - inttostrlen(loss)),  loss);
+		irc_print("%s %s :#%d %s%s %s%s %s%s %s%d %s%d", message_type, target, i,
+					    authid, fill(' ', authid_max - strlen(authid)),
+					    fill(' ', uname_max  - strlen(uname)),  uname,
+					    fill(' ', ip_max     - strlen(ip)),     ip,
+					    fill(' ', ping_max   - inttostrlen(ping)), ping,
+					    fill(' ', loss_max   - inttostrlen(loss)),  loss);
 	}
 
-	irc_print("%s %s :End Players List^r^n", message_type, target)
+	irc_print("%s %s :End Players List", message_type, target)
 }
 
 public irc_cmd_login(message_type[], name[], command[], prefix)
 {
-	new usern[31], pass[31], extra[31]
-	parse(command,extra,30,usern,30,pass,30)
-	new retstr[501], irir=0, a=0
-	new bool:userexists = false
-	while(read_file(accessfile,irir,retstr,500,a) != 0)
+	new usern[32], pass[32], extra[32];
+
+	parse(command, extra, sizeof(extra)-1,
+	               usern, sizeof(usern)-1,
+								 pass,  sizeof(pass) -1);
+
+	new retstr[512],
+	    irir = 0, a = 0,
+			bool:userexists = false;
+
+	while (read_file(accessfile, irir, retstr, sizeof(retstr)-1, a))
 	{
 		irir++
-		if(retstr[0] != '"') continue
-		new fuser[31], fpass[31], faccess[31], fid[31]
-		parse(retstr,fuser,30,fpass,30,faccess,30,fid,30)
-		if(equali(usern,fuser))
+		// # is the ommiting character for strings
+		if (retstr[0] == '#') continue;
+		new fuser[32], fpass[32], faccess[32], fid[32];
+
+		parse(retstr, fuser,   sizeof(fuser)   -1,
+		              fpass,   sizeof(fpass)   -1,
+									faccess, sizeof(faccess) -1,
+									fid,     sizeof(fid)     -1);
+
+		if (!equali(usern, fuser))
+			continue;
+
+		userexists = true;
+
+		if (!equali(pass,fpass))
 		{
-			userexists = true
-			if(equali(pass,fpass))
-			{
-				new fidnum = str_to_num(fid)
-				new bool:there = false
-				for(new inum=0;inum<MAX_USERS;inum++)
-				{
-					if(usersid[inum] == fidnum)
-						there = true
-				}
-				if(!there)
-				{
-					copy(users[curuser],30,name)
-					usersaccess[curuser] = read_flags(faccess)
-					usersid[curuser] = fidnum
-					curuser++
-					format(temp,1024,"PRIVMSG %s :You successfully logged in as %s.^r^n",name,usern)
-					additem(temp)
-					new writestr[101]
-					format(writestr,100,"^"%s^" ^"%s^" ^"%s^"",name,faccess,fid)
-					new nextline = 0
-					new rstr[201], fnum, b
-					while(read_file(loginfile,fnum,rstr,200,b))
-					{
-						if(b <= 0)
-						{
-							nextline = fnum
-							break
-						}
-						fnum++
-					}
-					if(!nextline)
-						write_file(loginfile,writestr)
-					else
-						write_file(loginfile,writestr,nextline)
-				}
-				else
-				{
-					format(temp,1024,"PRIVMSG %s :User %s is already logged in.^r^n",name,usern)
-					additem(temp)
-				}
-			}
-			else
-			{
-				format(temp,1024,"PRIVMSG %s :Invalid username/password combo: %s/%s.^r^n",name,usern,pass)
-				additem(temp)
-			}
+			irc_privmsg(name, "Invalid username/password combo: %s/%s.", usern, pass);
+			return;
 		}
+
+		new fidnum = str_to_num(fid);
+		new bool:there = false;
+		for (new inum=0; inum < MAX_USERS; inum++)
+		{
+			if (usersid[inum] == fidnum) there = true;
+		}
+
+		if (there)
+		{
+			irc_privmsg(name, "User %s is already logged in.", usern);
+			return;
+		}
+
+		copy(users[curuser], 30, name)
+		usersaccess[curuser] = read_flags(faccess);
+		usersid[curuser] = fidnum:
+		curuser++;
+		irc_privmsg(name, "You successfully logged in as %s.", usern);
+
+		new writestr[128];
+		format(writestr, sizeof(writestr)-1, "^"%s^" ^"%s^" ^"%s^"", name, faccess, fid);
+
+		new nextline = 0;
+		new rstr[201], fnum, b;
+		while (read_file(loginfile, fnum, rstr, sizeof(rstr)-1, b))
+		{
+			if (b <= 0)
+			{
+				nextline = fnum;
+				break;
+			}
+			fnum++;
+		}
+		if (!nextline)
+			write_file(loginfile, writestr);
+		else
+			write_file(loginfile, writestr, nextline);
 	}
-	if(!userexists)
+
+	if (!userexists)
 	{
-		format(temp,1024,"PRIVMSG %s :No admin accounts exist with username %s.^r^n",name,usern)
-		additem(temp)
+		irc_privmsg(name, "No admin accounts exist with username ^"%s^"", usern);
 	}
 }
 
 public irc_cmd_logout(message_type[], name[])
 {
-	irc_admin_logout(name, 1)
+	irc_admin_logout(name, 1);
 }
 
 public irc_cmd_ip(message_type[], target[])
 {
-	new ip[51];
-	get_user_ip(0, ip, 50);
-	irc_print("%s %s :Server IP: %s^r^n", message_type, target, ip);
+	new ip[64];
+	get_user_ip(0, ip, sizeof(ip)-1);
+	irc_print("%s %s :Server IP: %s", message_type, target, ip);
 }
 
 public irc_cmd_timeleft(message_type[], target[])
 {
-	new timeleft[26];
-	get_cvar_string("amx_timeleft", timeleft, 25);
-	irc_print("%s %s :Time left: %s^r^n", message_type, target, timeleft);
+	new timeleft[32];
+	get_cvar_string("amx_timeleft", timeleft, sizeof(timeleft)-1);
+	irc_print("%s %s :Time left: %s", message_type, target, timeleft);
 }
 
 public irc_cmd_nextmap(message_type[], target[])
 {
-	new nextmap[51];
-	get_cvar_string("amx_nextmap", nextmap, 50);
-	irc_print("%s %s :next map: %s^r^n", message_type, target, nextmap);
+	new nextmap[64];
+	get_cvar_string("amx_nextmap", nextmap, sizeof(nextmap)-1);
+	irc_print("%s %s :next map: %s", message_type, target, nextmap);
 }
 
 public irc_cmd_map(message_type[], target[])
 {
-	new mapname[51];
-	get_mapname(mapname, 50);
-	irc_print("%s %s :Current map: %s^r^n", message_type, target, mapname);
+	new mapname[64];
+	get_mapname(mapname, sizeof(mapname)-1);
+	irc_print("%s %s :Current map: %s", message_type, target, mapname);
 }
 
 public irc_cmd_status(message_type[], target[])
 {
-	new cvarstr[801];
-	get_cvar_string("irc_msg_startup", cvarstr, 800);
-
-	if (strlen(cvarstr) > 0)
-	{
-		new mapname[32];
-		new serverip[35];
-		new servername[101];
-		new playerstr[3], maxplayerstr[3];
-
-		get_mapname(mapname, 31);
-		get_user_ip(0, serverip, 34);
-		get_user_name(0, servername, 100);
-		num_to_str(get_playersnum(1), playerstr, 2);
-		num_to_str(get_maxplayers(), maxplayerstr, 2);
-
-		replace(cvarstr, 800, "$maxplayers", maxplayerstr);
-		replace(cvarstr, 800, "$curplayers", playerstr   );
-		replace(cvarstr, 800, "$map",        mapname     );
-		replace(cvarstr, 800, "$ip",         serverip    );
-		replace(cvarstr, 800, "$servername", servername  );
-
-		irc_print("%s %s :%s^r^n", message_type, target, cvarstr);
-	}
+	irc_print("%s %s :%s", message_type, target, get_server_status());
 }
 
 irc_handle_commands(name[], command[], priv)
@@ -409,94 +464,126 @@ irc_handle_commands(name[], command[], priv)
 irc_method_missing(name[], command[], priv)
 {
 	new adminaccess = is_irc_admin(name)
-	if (adminaccess != -1) do_command(name, adminaccess, command, (priv ? 0 : 1))
+	if (adminaccess != -1) do_command(name, adminaccess, command, (priv ? IRC_MSG_PRIVMSG : IRC_MSG_NOTICE));
+}
+
+// info formatting functions
+
+public get_server_status()
+{
+	str_get_cvar("irc_msg_startup");
+
+	if (strlen(temp) > 0)
+	{
+		new mapname[32],
+		    serverip[35],
+		    servername[100],
+		    playerstr[3],
+				maxplayerstr[3];
+
+		get_mapname (mapname, sizeof(mapname)-1);
+
+		get_user_ip  (0, serverip,   sizeof(serverip)-1);
+		get_user_name(0, servername, sizeof(servername)-1);
+
+		num_to_str(get_playersnum(1), playerstr,    sizeof(playerstr)-1);
+		num_to_str(get_maxplayers(),  maxplayerstr, sizeof(maxplayerstr)-1);
+
+		replace(temp, sizeof(temp)-1, "$maxplayers", maxplayerstr);
+		replace(temp, sizeof(temp)-1, "$curplayers", playerstr   );
+		replace(temp, sizeof(temp)-1, "$map",        mapname     );
+		replace(temp, sizeof(temp)-1, "$ip",         serverip    );
+		replace(temp, sizeof(temp)-1, "$servername", servername  );
+
+	}
+	return temp;
 }
 
 // main functions
 
 public plugin_init()
 {
-	register_plugin("HLDS<->IRC","2.7","devicenull")
-	register_dictionary("admincmd.txt")
-	register_dictionary("common.txt")
-	register_dictionary("pausecfg.txt")
+	register_plugin("hldsirc","2.7","devicenull")
+
+	register_dictionary("admincmd.txt");
+	register_dictionary("common.txt"  );
+	register_dictionary("pausecfg.txt");
+
 	// Cvars
-	register_cvar("irc_server","")
-	register_cvar("irc_nick","")
-	register_cvar("irc_username","")
-	register_cvar("irc_port","")
-	register_cvar("irc_channel","")
+	register_cvar("irc_server",   "");
+	register_cvar("irc_nick",     "");
+	register_cvar("irc_username", "");
+	register_cvar("irc_port",     "");
+	register_cvar("irc_channel",  "");
 
 
-	register_cvar("irc_prefix","1")
-	register_cvar("irc_showjoins","1")
-	register_cvar("irc_joindelay","10")
-	register_cvar("irc_identify","0")
-	register_cvar("irc_debug","0")
+	register_cvar("irc_prefix",     "1");
+	register_cvar("irc_show_joins", "1");
+	register_cvar("irc_show_team",  "1");
+	register_cvar("irc_joindelay", "10");
+	register_cvar("irc_identify",   "0");
+	register_cvar("irc_debug",      "0");
 
-	register_cvar("irc_ident","",FCVAR_PROTECTED&FCVAR_UNLOGGED)
+	register_cvar("irc_ident", "", FCVAR_PROTECTED&FCVAR_UNLOGGED);
 
 	register_cvar("irc_map_change","1")
 	register_cvar("irc_to_hlds_say_auto","1")
-	register_cvar("irc_from_hlds_say_auto","1")
 	register_cvar("irc_to_hlds_say_activator","!hlds")
-	register_cvar("irc_from_hlds_say_activator","!irc")
+
+	register_cvar("irc_hlds_activator", "");
 
 
 	//Various Messages
-	register_cvar("irc_msg_srvjoin"," $name ($steamid) has joined the server")
-	register_cvar("irc_msg_srvpart"," $name ($steamid) has left the server")
-	register_cvar("irc_msg_startup"," $servername  - $ip Current Map: $map $curplayers / $maxplayers players")
+	register_cvar("irc_msg_srvjoin", " $name ($steamid) has joined the server");
+	register_cvar("irc_msg_srvpart", " $name ($steamid) has left the server");
+	register_cvar("irc_msg_startup", " $servername  - $ip Current Map: $map $curplayers / $maxplayers players");
 
-	register_cvar("irc_msg_usecolors","1")
+	register_cvar("irc_msg_usecolors", "1");
 
-	register_cvar("irc_clientport","0",FCVAR_PROTECTED&FCVAR_UNLOGGED)
+	register_cvar("irc_socket","0",FCVAR_PROTECTED&FCVAR_UNLOGGED)
 
 	// Commands
-	register_concmd("irc","parseirc",0," Type ^"irc help^" for help")
+	register_concmd("irc","parseirc",0," Type ^"irc help^" for help");
 
 
-	register_clcmd("say","irc_saytext")
-	register_clcmd("say_team","irc_sayteamtext")
+	register_clcmd("say","cmd_say")
+	register_clcmd("say_team","cmd_say_team")
 
 	set_task(1.0, "IRC_Init");
 }
 
 public IRC_Init()
 {
-	server_print "HLDS <-> IRC is connecting"
+	server_print "hldsirc is connecting"
 	set_task(1.0,"irc_datacheck",_,_,_,"b")
 	set_task(0.5,"sendnext",_,_,_,"b")
-	if (get_cvar_num("irc_clientport") == 0)
-		set_task(get_cvar_float("irc_joindelay"),"irc_connect")
+
+	if (!get_cvar_num("irc_socket"))
+		set_task(get_cvar_float("irc_joindelay"), "irc_connect")
 	else
-		irc_socket = get_cvar_num("irc_clientport")
-	pings = 2
-	set_task(60.0,"checkping",_,_,_,"b")
-	get_cvar_string("irc_server",server,64)
-	get_cvar_string("irc_nick",nick,32)
-	get_cvar_string("irc_channel",chan,32)
-	get_cvar_string("irc_username",username,32)
-	port = get_cvar_num("irc_port")
-	if(irc_socket > 0)
-	{
-		startup_message(0,"")
-	}
-	new directory[176]
-	get_configsdir(directory,175)
-	format(accessfile,200,"%s/ircadmins.ini",directory)
-	get_datadir(directory,175)
-	format(loginfile,200,"%s/ircloggedin.list",directory)
-	admin_file()
+		irc_socket = get_cvar_num("irc_socket")
+
+	if (irc_socket > 0)
+		irc_server_status(IRC_MSG_PRIVMSG, get_chan());
+
+	new directory[128];
+	get_configsdir(directory, sizeof(directory)-1);
+	format(accessfile, sizeof(accessfile)-1, "%s/ircadmins.ini", directory);
+	admin_file_create();
+
+	get_datadir(directory, sizeof(directory)-1);
+	format(loginfile, sizeof(loginfile)-1, "%s/ircloggedin.list", directory);
+
 	admin_check()
 }
-public admin_file()
+
+public admin_file_create()
 {
 	if(!file_exists(accessfile))
 	{
-		new writestr[501]
-		format(writestr,500,"HLDS<->IRC Admin Setup File^nTo add admins simply put entries in the form: ^"username^" ^"password^" ^"accesslevel^" ^"unique id^".^nAccess level uses the same levels as users.ini. The unique id is a unique number to identify each admin.^nExample:^"test^" ^"test^" ^"abcdefghijklmnopqrstu^" ^"1337^"")
-		write_file(accessfile,writestr)
+		write_file(accessfile, "# ^"username^" ^"password^" ^"flags^" ^"unique id^"");
+		write_file(accessfile, "# Access level uses the same levels as users.ini. The unique id is a unique number to identify each admin.");
+		write_file(accessfile, "# ^"test^" ^"test^" ^"abcdefghijklmnopqrstu^" ^"1337^"");
 	}
 }
 
@@ -504,9 +591,7 @@ public admin_check()
 {
 	if(!file_exists(loginfile))
 	{
-		new writestr[201]
-		format(writestr,200,"HLDS<->IRC Logged In Admins File...DO NOT MODIFY")
-		write_file(loginfile,writestr)
+		write_file(loginfile, "hldsirc Log file")
 	}
 	else
 	{
@@ -527,269 +612,265 @@ public admin_check()
 	}
 }
 
-public startup_message(style,name[])
-{
-	new cvarstr[801]
-	get_cvar_string("irc_msg_startup",cvarstr,800)
-	if(strlen(cvarstr) > 0)
-	{
-		new mapname[32]
-		get_mapname(mapname,31)
-		new serverip[35]
-		get_user_ip(0,serverip,34)
-		new servername[101]
-		get_user_name(0,servername,100)
-		new playerstr[3], maxplayerstr[3]
-		num_to_str(get_playersnum(1),playerstr,2)
-		num_to_str(get_maxplayers(),maxplayerstr,2)
-		replace(cvarstr,800,"$maxplayers",maxplayerstr)
-		replace(cvarstr,800,"$curplayers",playerstr)
-		replace(cvarstr,800,"$map",mapname)
-		replace(cvarstr,800,"$ip",serverip)
-		replace(cvarstr,800,"$servername",servername)
-		if(style == 1)
-			format(temp,1024,"PRIVMSG %s :%s^r^n",name,cvarstr)
-		else if(style == 2)
-			format(temp,1024,"NOTICE %s :%s^r^n",name,cvarstr)
-		else
-			format(temp,1024,"PRIVMSG %s :%s^r^n",chan,cvarstr)
-		additem(temp)
-	}
-}
-
 public irc_connect()
 {
-	get_cvar_string("irc_server",server,64)
-	get_cvar_string("irc_nick",nick,32)
-	get_cvar_string("irc_channel",chan,32)
-	get_cvar_string("irc_username",username,32)
-	port = get_cvar_num("irc_port")
-	irc_socket = socket_open(server,port,SOCKET_TCP,error)
-	set_cvar_num("irc_clientport",irc_socket)
+	new server[64];
+	copy(server, sizeof(server)-1, get_server());
+
+	new port = get_port();
+	new error;
+
+	irc_socket = socket_open(server, port, SOCKET_TCP, error);
+
 	switch (error)
 	{
-		case 1:
-		{
-			log_amx("[IRC] Error creating socket to %s:%i",server,port)
-			return -1
-		}
-		case 2:
-		{
-			log_amx("[IRC] Error resolving hostname %s",server)
-			return -2
-		}
-		case 3:
-		{
-			log_amx("[IRC] Couldn't connect to %s:%i",server,port)
-			return -3
-		}
+		case 1: { log_amx("[IRC] Error creating socket to %s:%i", server, port); return -1; }
+		case 2: { log_amx("[IRC] Error resolving hostname %s", server);         return -2; }
+		case 3:	{ log_amx("[IRC] Couldn't connect to %s:%i", server, port);     return -3; }
 	}
-	format(temp,1024,"NICK %s^r^nUSER %s 0 * :HLDS Bot^r^n",nick,username)
-	additem(temp)
-	pings=2
 
+	pings = 0;
+
+	set_cvar_num("irc_socket", irc_socket);
+
+	irc_print("NICK %s^r^nUSER %s 0 * :HLDS Bot", get_nick(), get_username());
+	pings = 2;
 
 	server_print("[IRC] Connected sucessfully");
-	irc_joinchannel()
-	set_cvar_num("irc_clientport",irc_socket)
-	irc_identify()
-	startup_message(0,"")
-
+	irc_join_default();
+	irc_identify();
+	irc_server_status(IRC_MSG_PRIVMSG, get_chan());
 
 	return irc_socket
 }
-public checkping()
+
+public irc_datacheck()
 {
-	if (pings == 0)
+	if (!socket_change(irc_socket, 1))
+		return;
+
+	new data[1024];
+	socket_recv(irc_socket, data, sizeof(data)-1);
+
+	while (strtok(data, temp, sizeof(temp)-1, data, sizeof(data)-1, 10))
 	{
-		end()
-		set_task(Float:60.0,"irc_connect")
-		server_print("[IRC] Disconnected by ping timeout, will try to reconnect in 60 seconds")
+		new left = strlen(temp);
+		if (!left) break;
+
+		temp[left-1] = 0; // delete ^r
+		irc_parse(temp);
+	}
+}
+
+static irc_numeric_events[][] = {
+	{ 403, "No such channel" },
+	{ 405, "Can't join any more channels" },
+	{ 432, "Invalid characters in nickname" },
+	{ 433, "Nickname in use" },
+	{ 437, "Can't change nick, we are in a channel we are banned from" },
+	{ 471, "Limit on channel reached, remove +l and try again" },
+	{ 473, "Channel is +i, invite us in and try again" },
+	{ 474, "We are banned from that channel" },
+	{ 475, "Channel is +k and we don't have the key!" },
+	{ 482, "Can't set modes when we aren't op" }
+}
+
+public irc_parse(raw[])
+{
+	if (!strlen(raw))
+		return;
+
+	if (get_cvar_num("irc_debug"))
+		server_print("[IRC]<- %s", raw);
+
+	new Regex:id,
+	    err[512], errlen,
+	    ret;
+
+	id = regex_match(raw, "(^^:(\S+) )?(\S+)(.*)", ret, err, errlen);
+
+	new prefix    [128],
+	    command   [128],
+	    raw_params[128];
+
+	regex_substr(id, 2, prefix,     sizeof(prefix)    -1);
+	regex_substr(id, 3, command,    sizeof(command)   -1);
+	regex_substr(id, 4, raw_params, sizeof(raw_params)-1);
+	regex_free(id);
+
+	id = regex_match(raw_params, "(?:^^:| :)(.*)$", ret, err, errlen);
+	new arg1[128],
+	    target[128];
+
+	if (id > 0)
+	{
+		regex_substr(id, 1, arg1, sizeof(arg1)-1);
+		regex_free(id);
+		trim(raw_params);
+		strtok(raw_params, target, sizeof(target)-1, raw_params, sizeof(raw_params)-1, ' ');
 	}
 	else
 	{
-		pings = 1
+		trim(raw_params);
+		strtok(raw_params, arg1, sizeof(arg1)-1, raw_params, sizeof(raw_params)-1, ' ');
 	}
-}
-public irc_datacheck()
-{
-	if (socket_change(irc_socket,1))
+
+	new pnick[128],
+	    puser[128],
+	    phost[128];
+
+	id = regex_match(prefix, "^^(\S+)!(\S+)@(\S+)$", ret, err, errlen);
+	if (id > 0)
 	{
-		new rdata[1024] //, data[1024]
-		socket_recv(irc_socket,rdata,1024)
-		copyc(rdata,1024,rdata,10)
-		irc_dataparse(rdata)
-		copy(temp,1024,rdata[strlen(rdata)+1])
-		if (containi(temp,"^r"))
+		regex_substr(id, 1, pnick, sizeof(pnick)-1);
+		regex_substr(id, 2, puser, sizeof(puser)-1);
+		regex_substr(id, 3, phost, sizeof(phost)-1);
+		regex_free(id);
+	}
+
+	new numeric_event = str_to_num(command);
+	switch (numeric_event)
+	{
+		// Numeric Events - http://www.faqs.org/rfcs/rfc1459.html
+		case 001:
 		{
-			irc_dataparse(rdata[strlen(rdata)+1])
+			server_print("[IRC] Connected sucessfully");
+			irc_join_default();
+			set_cvar_num("irc_socket", irc_socket);
+			irc_identify();
+			irc_server_status(IRC_MSG_PRIVMSG, get_chan());
+			return;
 		}
+		// Following events occure after successful connection
+		case 513:
+		{
+			server_print("[IRC] Error: Registration failed, try again later");
+			irc_quit("");
+			return;
+		}
+		// events with message, but no action
+		default:
+		{
+			for (new i = 0; i < sizeof(irc_numeric_events); i++)
+			{
+				if (irc_numeric_events[i][0] == numeric_event)
+				{
+					server_print("[IRC] Error: %s", irc_numeric_events[i][1]);
+					return;
+				}
+			}
+		}
+	}
+
+	if (equali(command, "PING"))
+	{
+		irc_pong(arg1);
+		pings++;
+	}
+	else if (equali(command, "NICK"))
+	{
+		on_nick(pnick, arg1);
+	}
+	else if (equali(command, "QUIT"))
+	{
+		on_quit(pnick, arg1);
+	}
+	else if (equali(command, "ERROR"))
+	{
+		irc_quit("");
+		server_print("[IRC] Disconnected, trying to reconnect");
+		set_task(60.0, "irc_connect");
+	}
+	else if (equali(command, "PRIVMSG"))
+	{
+		on_privmsg(target, pnick, arg1);
 	}
 }
 
-public irc_dataparse(rdata[])
+on_privmsg(target[], pnick[], message[])
 {
-	if(strlen(rdata) > 0)
-	{ //If there is data
-		new arg1[128],arg1len,arg2[128] ,arg2len, arg3[128]
-		copyc(arg1,128,rdata,32)
-		arg1len = strlen(arg1)
-		copyc(arg2,128,rdata[arg1len+1],32)
-		arg2len = strlen(arg2)
-		copyc(arg3,128,rdata[arg1len+arg2len+2],32)
-		switch (str_to_num(arg2))
-		{ //Numeric Events
-			case 001:
-			{
-				server_print("[IRC] Connected sucessfully");
-				irc_joinchannel()
-				set_cvar_num("irc_clientport",irc_socket)
-				irc_identify()
-				startup_message(0,"")
-				return 0
-			} //Occurs after successful connection
-			case 403: { server_print("[IRC] Warning: We are not in the channel, but we tried to send a message to it and the channel is empty, channel %s",chan); return 0; }
-			case 405: { server_print("[IRC] Error: Can't join any more channels, the server won't allow it"); return 0; }
-			case 432: { server_print("[IRC] Error: Invalid characters in nickname"); return 0; }
-			case 433: { server_print("[IRC] Error: Nickname in use"); return 0; }
-			case 437: { server_print("[IRC] Error: Can't change nick, we are in a channel we are banned from"); return 0; }
-			case 471: { server_print("[IRC] Error: Limit on channel reached, remove +l and try again"); return 0; }
-			case 473: { server_print("[IRC] Error: Channel is +i, invite us in and try again"); return 0; }
-			case 474: { server_print("[IRC] Error: We are banned from that channel"); return 0; }
-			case 475: { server_print("[IRC] Error: Channel is +k and we don't have the key!"); return 0; }
-			case 482: { server_print("[IRC] Error: Can't set modes when we aren't op"); return 0; }
-			case 513: { server_print("[IRC] Error: Registration failed, try again later"); end(); return 0; }
-		}
-		if (get_cvar_num("irc_debug") == 1)
-			server_print("[IRC]-> %s",rdata)
+	if (equali(target, get_chan()))
+		irc_handle_commands(pnick, message, 0);
+	else
+		irc_handle_commands(pnick, message, 1);
 
+	new frmt[256];
+	if (equali(target, get_chan()))
+	{
+		if (get_cvar_num("irc_prefix"))
+			format(frmt,256,"%s@%s <%s> %s", target, get_server(), pnick, message);
+		else
+			format(frmt,256,"*IRC* <%s> %s", pnick, message);
 
-		if( contain(rdata, "^r^nPING :") > -1 )
+		if(!get_cvar_num("irc_to_hlds_say_auto"))
 		{
-			new arg2[33];
-			copy(arg2, 32, rdata[contain(rdata, "^r^nPING :")])
-			replace_all(arg2, 32, "^r^nPING :", "");
-			replace_all(arg2, 32, "^r^n", "");
-			format(temp,1024,"PONG :%s^n",arg2)
-			additem(temp)
-			pings++
-			return 0
+			new activator[26]
+			get_cvar_string("irc_to_hlds_say_activator", activator, 25)
+			if (containi(frmt,activator) == -1)
+				return
+			else
+				replace(frmt, 256, activator, "")
 		}
-		else if (equali(arg1,"PING"))
-		{
-			format(temp,1024,"PONG %s^r^n",arg2)
-			additem(temp)
-			pings++
-			return 0
-		}
-		else if (equali(arg2,"PRIVMSG"))
-		{
-			// Username!Ident@Host PRIVMSG Destination :Message
-			new user[32], message[768], frmt[256]
-			new arg123len
-			copyc(user,32,arg1[1],33) //Get the username out of arg1
-			arg123len = strlen(arg1) + 1 + strlen(arg2) + 1 + strlen(arg3) + 1
-			copy(message,768,rdata[arg123len])
-			copyc(message,768,message,13)
-			new truemessage[768]
-			copy(truemessage,768,message[1])
-			if(equali(arg3,chan))
-			{
-				//channel_commands(user, truemessage)
-				irc_handle_commands(user, truemessage, 0);
-			}
-			else {
-				//private_commands(user, truemessage)
-				irc_handle_commands(user, truemessage, 1);
-			}
-			if(is_irc_admin(user) != -1)
-				admin_commands(user, truemessage)
-			if (equali(arg3,chan))
-			{
-				new firstword[128]
-				copyc(firstword,128,message[1],44)
-				// Its a message that should go to the server
-				if (get_cvar_num("irc_prefix"))
-					format(frmt,256,"%s@%s <%s> %s",chan,server,user,message[1])
-				else
-					format(frmt,256,"*IRC* <%s> %s",user,message[1])
-				if(!get_cvar_num("irc_to_hlds_say_auto"))
-				{
-					new activator[26]
-					get_cvar_string("irc_to_hlds_say_activator",activator,25)
-					if(containi(frmt,activator) == -1)
-						return 0
-					else
-					{
-						replace(frmt,256,activator,"")
-					}
-				}
-				client_print(0,print_chat,"%s",frmt)
-				return 0
-			}
-		}
-		else if(equali(arg2,"NICK"))
-		{
-			new oldname[31], newname[31], tempname[32]
-			copy(newname,30,arg3[1])
-			copyc(tempname,31,arg1,33)
-			copy(oldname,30,tempname[1])
-			trim(oldname)
-			trim(newname)
-			for(new inum=0;inum<MAX_USERS;inum++)
-			{
-				if(equali(users[inum],oldname))
-				{
-					copy(users[inum],30,newname)
-					new retstr[201], jnum, a
-					while(read_file(loginfile,jnum,retstr,200,a) != 0)
-					{
-						new usern[31], uaccess[31], fid[31]
-						parse(retstr,usern,30,uaccess,30,fid,30)
-						if(equali(usern,oldname))
-						{
-							replace(retstr,200,oldname,newname)
-							write_file(loginfile,retstr,jnum)
-						}
-						jnum++
-					}
-				}
-			}
-		}
-		else if(equali(arg2,"QUIT"))
-		{
-			new leavename[31], tempname[32]
-			copyc(tempname,31,arg1,33)
-			copy(leavename,30,tempname[1])
-			irc_admin_logout(leavename,0)
-		}
-		else if (equali(arg1,"ERROR"))
-		{
-			end()
-			server_print("[IRC] Disconnected, trying to reconnect")
-			set_task(Float:60,"irc_connect")
-		}
+		client_print(0, print_chat, "%s", frmt)
 	}
-	return 0
 }
+
+public on_quit(leavename[], message[])
+{
+	irc_admin_logout(leavename, false);
+}
+
+public on_nick(oldname[], newname[])
+{
+	admin_changenick(oldname, newname);
+}
+
+public admin_changenick(oldname[], newname[])
+{
+	for (new i = 0; i < MAX_USERS; i++)
+	{
+		if(!equali(users[i], oldname))
+			continue;
+
+		copy(users[i], 30, newname);
+		new retstr[200], jnum, a;
+		while (read_file(loginfile, jnum, retstr, sizeof(retstr)-1, a) != 0)
+		{
+			new usern[32], uaccess[32], fid[32];
+			parse(retstr, usern,   sizeof(usern)  -1,
+			              uaccess, sizeof(uaccess)-1,
+			              fid,     sizeof(fid)    -1);
+
+			jnum++;
+
+			if (!equali(usern,oldname))
+				continue;
+
+			replace(retstr, sizeof(retstr)-1, oldname, newname);
+			write_file(loginfile, retstr, jnum);
+		}
+
+	}
+}
+
 public additem(item[])
 {
 	if(curmesg <= 255)
 	{
-		copy(pending[curmesg],1024,item)
-		curmesg++
+		copy(pending[curmesg], 1024, item);
+		curmesg++;
 	}
 	else
 	{
-		new quicksend[201]
-		format(quicksend,200,"PRIVMSG %s :IRC message overflow, clearing stack.^r^n",chan)
-		socket_send(irc_socket,quicksend,0)
+		new quicksend[256];
+		format(quicksend, sizeof(quicksend)-1, "PRIVMSG %s :IRC message overflow, clearing stack.^r^n", get_chan());
+		socket_send(irc_socket, quicksend, 0);
 		log_amx("IRC Message Stack Overflow...Clearing...")
-		for(new inum=0;inum<256;inum++)
+		for(new i = 0; i < 256;i++)
 		{
-			copy(pending[inum],1024,"")
+			copy(pending[i], 1024," ");
 		}
-		curmesg = 0
+		curmesg = 0;
 	}
 	return 0
 }
@@ -800,9 +881,9 @@ public sendnext()
 	{
 		remove_quotes(pending[0])
 		socket_send(irc_socket,pending[0],0)
-		if (get_cvar_num("irc_debug") == 1)
-			server_print("[IRC]<- %s",pending[0])
-		for (i=0;i<=curmesg;i++)
+		if (get_cvar_num("irc_debug"))
+			server_print("[IRC]-> %s", pending[0]);
+		for (new i=0;i<=curmesg;i++)
 		{
 			copy(pending[i],1024,pending[i+1])
 		}
@@ -810,258 +891,222 @@ public sendnext()
 	}
 }
 
-public end()
-{
-	format(temp,1024,"QUIT : HLDS<->IRC by Devicenull ^r^n")
-	socket_send(irc_socket,temp,0)
-	set_cvar_num("irc_clientport",0)
+static cmd_irc_commands[][] = {
+	{ "connect",	  "Connects the bot to the server and channel selected by the cvars." },
+	{ "disconnect", "Disconnects the bot from the active server." },
+	{ "say",        "Prints some text in the channel selected by the cvar" },
+	{ "join",       "Attempts to join the default channel" },
+	{ "stats",      "Reports the status of the bot" },
+	{ "help",       "Prints this help message" },
+	{ "identify",   "Sends the bot identification string to the server" }
 }
 
-public irc_joinchannel()
+public cmd_irc_connect(id)
 {
-	get_cvar_string("irc_channel",chan,32)
-	format(temp,1024,"JOIN %s^r^n",chan)
-	additem(temp)
-	return 0
+	irc_connect();
+	console_print(id,"[IRC] Attempting to connect")
 }
 
-public irc_identify()
+public cmd_irc_disconnect(id)
 {
-	if (get_cvar_num("irc_identify") != 0)
+	irc_quit("");
+	console_print(id,"[IRC] Disconnecting")
+}
+
+public cmd_irc_say(id)
+{
+	new msg[1024];
+	read_args(msg, sizeof(msg)-1);
+	// ommit "say "
+	// strlen("say ") == 4
+	irc_privmsg(get_chan(), msg[4]);
+}
+
+public cmd_irc_join(id)
+{
+	irc_join_default();
+	console_print(id,"[IRC] Attempting to join %s", get_chan());
+}
+
+public cmd_irc_stats(id)
+{
+		console_print(id, "[IRC] Status:");
+		console_print(id, "[IRC] cvar port %i, irc_socket %i", get_cvar_num("irc_socket"), irc_socket);
+		console_print(id, "[IRC] internal vars: nick: %s, username: %s, chan: %s, server: %s, port: %i",
+		                  get_nick(), get_username(), get_chan(), get_server(), get_port());
+		console_print(id, "[IRC] Ping counter at %i, message counter at %i", pings, curmesg);
+}
+
+public cmd_irc_help(id)
+{
+	server_print("[IRC] #irc subcommand - description");
+
+	for (new i = 0; i < sizeof(cmd_irc_commands); i++)
 	{
-		new ident[256]
-		get_cvar_string("irc_ident",ident,256)
-		format(ident,256,"%s^r^n",ident)
-		additem(ident)
+		new arg2 = strlen(cmd_irc_commands[i][0]);
+		console_print(id, "[IRC] irc %s - %s", cmd_irc_commands[i][0], cmd_irc_commands[i][arg2+1]);
 	}
-	return 0
+}
+
+public cmd_irc_identify(id)
+{
+	irc_identify()
+	console_print(id,"[IRC] Identifying")
 }
 
 public parseirc(id)
 {
 	if (!(get_user_flags(id)&ACCESS_IRC))
 	{
-		console_print(id,"[IRC] Access Denied")
-		return PLUGIN_HANDLED
+		console_print(id, "[IRC] Access Denied");
+		return PLUGIN_HANDLED;
 	}
-	new arg1[32]
-	read_argv(1,arg1,32)
-	if (equali(arg1,"connect") || equali(arg1,"reconnect"))
+	new subcommand[32];
+	read_argv(1, subcommand, sizeof(subcommand) -1);
+
+	for (new i = 0; i < sizeof(cmd_irc_commands); i++)
 	{
-		irc_connect()
-		console_print(id,"[IRC] Attempting to connect")
-		return PLUGIN_HANDLED
+		if (equali(subcommand, cmd_irc_commands[i][0]))
+		{
+			callfunc_begin(format2("cmd_irc_%s", cmd_irc_commands[i][0]));
+			callfunc_push_int(id);
+			callfunc_end();
+			return PLUGIN_HANDLED;
+		}
 	}
-	else if (equali(arg1,"disconnect"))
-	{
-		end()
-		console_print(id,"[IRC] Disconnecting")
-		return PLUGIN_HANDLED
-	}
-	else if (equali(arg1,"say"))
-	{
-		new msg[1024]
-		read_args(msg,32)
-		format(temp,1024,"PRIVMSG %s :%s^r^n",chan,msg[4])
-		additem(temp)
-	}
-	else if (equali(arg1,"join"))
-	{
-		irc_joinchannel()
-		console_print(id,"[IRC] Attempting to join %s",chan)
-	}
-	else if (equali(arg1,"status"))
-	{
-		console_print(id,"[IRC] Status:")
-		console_print(id,"[IRC] Cvar reports port %i, irc_socket reports %i",get_cvar_num("irc_clientport"),irc_socket)
-		console_print(id,"[IRC] Internal vars: Nick: %s/Username: %s/Chan: %s/Server: %s/Port: %i",nick,username,chan,server,port)
-		console_print(id,"[IRC] Ping counter at %i, message counter at %i",pings,curmesg)
-	}
-	else if (equali(arg1,"help"))
-	{
-		console_print(id,"[IRC] For help setting the bot up, connect to irc.gamesurge.net channel #IRCHLDS")
-		console_print(id,"[IRC] DO NOT HAVE THIS BOT CONNECT THERE")
-	}
-	else if (equali(arg1,"ident") || equali(arg1,"identify"))
-	{
-		irc_identify()
-		console_print(id,"[IRC] Identifying")
-	}
-	else
-	{
-		console_print(id,"[IRC] Command not found")
-	}
-	return PLUGIN_HANDLED
+	console_print(id, "[IRC] Error: Uknown command");
+	cmd_irc_help(id);
+	return PLUGIN_HANDLED;
 }
 
-public parsemessage(id,input[],output[],amsg[])
+public parsemessage(id, input[], msg[])
 {
 	// Replaces $name $steamid $team $teamn $message with the right things
-	new name[32], authid[32], team[32], teamn, teamnstr[32], ctime, hrs, csec, flags[32], times[128]
-	new mtemp[1024]
-	get_user_name(id,name,32)
-	get_user_authid(id,authid,32)
-	get_user_team(id,team,32)
-	ctime = get_user_time(id)
-	get_flags(get_user_flags(id),flags,32)
-	hrs = floatround(float(ctime/60))
-	csec = ctime-(hrs*60)
-	format(times,128,"[%i:%i]",hrs,csec)
-	teamn = entity_get_int(id, EV_INT_team)
-	num_to_str(teamn,teamnstr,32)
-	copy(mtemp,512,input)
-	remove_quotes(amsg)
-	replace(mtemp,512,"$name",name)
-	replace(mtemp,512,"$steamid",authid)
-	replace(mtemp,512,"$teamn",teamnstr)
-	replace(mtemp,512,"$team",team)
-	replace(mtemp,512,"$message",amsg)
-	replace(mtemp,512,"$connected",times)
-	replace(mtemp,512,"$access",flags)
-	remove_quotes(mtemp)
-	remove_quotes(mtemp)
-	copy(output,1024,mtemp)
+	new name[32], authid[32], team[32], teamn, teamnstr[32], ctime, hrs, csec, flags[32], times[128];
+
+	get_user_name  (id, name,   sizeof(name)   -1);
+	get_user_authid(id, authid, sizeof(authid) -1);
+	get_user_team  (id, team,   sizeof(team)   -1);
+
+	get_flags(get_user_flags(id), flags, sizeof(flags) -1);
+
+	ctime = get_user_time(id);
+	hrs = floatround(float(ctime/60));
+	csec = ctime-(hrs*60);
+	format(times,128,"[%i:%i]", hrs, csec);
+	teamn = entity_get_int(id, EV_INT_team);
+	num_to_str(teamn,teamnstr, sizeof(teamnstr) -1);
+	copy(temp, strlen(input), input);
+	remove_quotes(msg);
+
+	replace(temp, sizeof(temp)-1, "$name",      name    );
+	replace(temp, sizeof(temp)-1, "$steamid",   authid  );
+	replace(temp, sizeof(temp)-1, "$teamn",     teamnstr);
+	replace(temp, sizeof(temp)-1, "$team",      team    );
+	replace(temp, sizeof(temp)-1, "$message",   msg     );
+	replace(temp, sizeof(temp)-1, "$connected", times   );
+	replace(temp, sizeof(temp)-1, "$access",    flags   );
+
+	remove_quotes(temp);
+	return temp;
 }
 
-public irc_saytext(id)
+public cmd_say(id)
 {
-	if (irc_socket > 0)
-	{
-		new msg[1024]
-		read_args(msg,1024)
-		remove_quotes(msg)
-		if(strlen(msg) <= 0)
-			return PLUGIN_CONTINUE
-		new name[32]
-		get_user_name(id,name,31)
-		if(containi(msg,"/admin") != -1)
-		{
-			replace(msg,1024,"/admin","")
-			format(temp,1024,"PRIVMSG %s :Admin request by %s. %s^r^n",chan,name,msg)
-			server_print("TEMP: %s CHAN: %s",temp,chan)
-			additem(temp)
-			client_print(id,print_chat,"Your admin request was sent to the channel.")
-			return PLUGIN_HANDLED
-		}
-		else if(!get_cvar_num("irc_from_hlds_say_auto"))
-		{
-			new activator[26]
-			get_cvar_string("irc_from_hlds_say_activator",activator,25)
-			if(containi(msg,activator) == -1)
-				return PLUGIN_CONTINUE
-			else
-				replace(msg,1024,activator,"")
-		}
-		new finalmessage[301], len
-		len = format(finalmessage,300,"PRIVMSG %s :<HLDS> ",chan)
-		if(!is_user_alive(id))
-			len += format(finalmessage[len],300-len,"*DEAD* ")
-		if(get_cvar_num("irc_msg_usecolors"))
-		{
-			new team = get_user_team(id)
-			switch(team)
-			{
-				case 1: len += format(finalmessage[len],300-len,"4 %s",name)
-					case 2: len += format(finalmessage[len],300-len,"12 %s",name)
-					default: len += format(finalmessage[len],300-len,"0 %s",name)
-			}
-		}
-		else
-			len += format(finalmessage[len],300-len,"%s",name)
-		len += format(finalmessage[len],300-len,": %s^r^n",msg)
-		additem(finalmessage)
-	}
-	return 0
+	return cmd_say_base(id, 1);
 }
 
-public irc_sayteamtext(id)
+public cmd_say_team(id)
 {
-	if (irc_socket > 0)
+	return cmd_say_base(id, 0);
+}
+
+static irc_team_colors[][] = { { "00" }, { "04" }, { "12" }, { "00" } };
+static irc_team_strings[][] = { { "Spectator" }, { "Terrorist "}, { "Counter-Terrorist" }, { "Spectator" } };
+
+cmd_say_base(id, pub)
+{
+	if (!irc_socket)
+		return PLUGIN_CONTINUE;
+
+	new msg[1024];
+
+	read_args(msg, sizeof(msg)-1);
+	remove_quotes(msg);
+
+	if(!strlen(msg))
+		return PLUGIN_CONTINUE;
+
+	new name[32];
+	get_user_name(id, name, sizeof(name)-1);
+	if (containi(msg,"/admin") != -1)
 	{
-		new msg[1024]
-		read_args(msg,1024)
-		remove_quotes(msg)
-		if(strlen(msg) <= 0)
-			return PLUGIN_CONTINUE
-		new name[32]
-		get_user_name(id,name,31)
-		if(containi(msg,"/admin") != -1)
-		{
-			replace(msg,1024,"/admin","")
-			format(temp,1024,"PRIVMSG %s :Admin request by %s. %s^r^n",chan,name,msg)
-			server_print("TEMP: %s CHAN: %s",temp,chan)
-			additem(temp)
-			client_print(id,print_chat,"Your admin request was sent to the channel.")
-			return PLUGIN_HANDLED
-		}
-		else if(!get_cvar_num("irc_from_hlds_say_auto"))
-		{
-			new activator[26]
-			get_cvar_string("irc_from_hlds_say_activator",activator,25)
-			if(containi(msg,activator) == -1)
-				return 0
-			else
-				replace(msg,1024,activator,"")
-		}
-		new finalmessage[301], len, team
-		len = format(finalmessage,300,"PRIVMSG %s :<HLDS> ",chan)
-		if(!is_user_alive(id))
-			len += format(finalmessage[len],300-len,"*DEAD* ")
-		new modname[51]
-		get_modname(modname,50)
-		if(equali(modname,"cstrike"))
-		{
-			team = get_user_team(id)
-			switch(team)
-			{
-				case 1: len += format(finalmessage[len],300-len,"(Terrorist)",name)
-					case 2: len += format(finalmessage[len],300-len,"(Counter-Terrorist)",name)
-					default: len += format(finalmessage[len],300-len,"(Spectator)",name)
-			}
-		}
-		if(get_cvar_num("irc_msg_usecolors"))
-		{
-			team = get_user_team(id)
-			switch(team)
-			{
-				case 1: len += format(finalmessage[len],300-len,"4 %s",name)
-					case 2: len += format(finalmessage[len],300-len,"12 %s",name)
-					default: len += format(finalmessage[len],300-len,"0 %s",name)
-			}
-		}
-		else
-			len += format(finalmessage[len],300-len,"%s",name)
-		len += format(finalmessage[len],300-len,": %s^r^n",msg)
-		additem(finalmessage)
+		replace(msg, sizeof(msg)-1, "/admin", ""); // remove the /admin command
+		irc_privmsg(get_chan(), "Admin request by %s. %s", name, msg);
+		client_print(id, print_chat, "Your admin request was sent to the channel.");
+		return PLUGIN_HANDLED;
 	}
-	return 0
+	else if (strlen(str_get_cvar("irc_hlds_activator")) > 0)
+	{
+		if (containi(msg, temp) == -1)
+			return PLUGIN_CONTINUE;
+		else
+			replace(msg, sizeof(msg), temp, "");
+	}
+
+	new payload[1024];
+	payload[0] = 0;
+
+	if (!is_user_alive(id))
+		strcat(payload, "*DEAD* ", sizeof(payload)-1);
+
+	new modname[50];
+	get_modname(modname, sizeof(modname)-1);
+
+	if (equali(modname, "cstrike"))
+	{
+		if (!pub)
+		{
+			formatex(payload, sizeof(payload)-1, "%s(%s) ", payload,
+																											irc_team_strings[get_user_team(id)]);
+		}
+		if (get_cvar_num("irc_msg_usecolors"))
+			strcat(payload, irc_team_colors[get_user_team(id)], sizeof(payload)-1);
+
+		formatex(payload, sizeof(payload)-1, "%s%s: %s", payload, name, msg);
+	}
+	else
+		formatex(payload, sizeof(payload)-1, "%s%s: %s", payload, name, msg);
+
+
+	irc_privmsg(get_chan(), "<HLDS> %s", payload);
+	return PLUGIN_CONTINUE;
 }
 
 public client_putinserver(id)
 {
-	if (irc_socket > 0 && get_cvar_num("irc_showjoins") == 1)
+	if (irc_socket > 0 && get_cvar_num("irc_show_joins") == 1)
 	{
-		new tmsg[1024]
-		get_cvar_string("irc_msg_srvjoin",tmsg,1024)
-		if (strlen(tmsg) == 0)
-			return 0
-		parsemessage(id,tmsg,temp,"")
-		format(temp,1024,"PRIVMSG %s :%s^r^n",chan,temp)
-		additem(temp)
+		str_get_cvar("irc_msg_srvjoin");
+
+		if (strlen(temp) == 0)
+			return 0;
+
+		irc_privmsg(get_chan(), parsemessage(id, temp, ""));
 	}
 	return 0
 }
+
 public client_disconnect(id)
 {
-	if (irc_socket > 0 && get_cvar_num("irc_showjoins") == 1)
+	if (irc_socket > 0 && get_cvar_num("irc_show_joins") == 1)
 	{
-		new tmsg[1024]
-		get_cvar_string("irc_msg_srvpart",tmsg,1024)
-		if (strlen(tmsg) == 0)
-			return 0
-		parsemessage(id,tmsg,temp,"")
-		format(temp,1024,"PRIVMSG %s :%s^r^n",chan,temp)
-		additem(temp)
+		str_get_cvar("irc_msg_srvpart");
+
+		if (strlen(temp) == 0)
+			return 0;
+
+		irc_privmsg(get_chan(), parsemessage(id, temp, ""));
 	}
 	return 0
 }
@@ -1081,97 +1126,98 @@ public is_irc_admin(name[])
 
 public irc_admin_logout(adminname[], report)
 {
-	new adminnum = 0, bool:there = false
-	for(new inum=0;inum<MAX_USERS;inum++)
+	new adminnum = 0, bool:there = false;
+
+	for (new inum=0;inum < MAX_USERS; inum++)
 	{
-		if(equali(users[inum],adminname))
+		if (equali(users[inum],adminname))
 		{
-			there = true
-			adminnum = inum
+			there = true;
+			adminnum = inum;
 		}
 	}
-	if(!there)
+
+	if (!there)
 	{
-		format(temp,1024,"PRIVMSG %s :You are not logged in as an admin.^r^n",adminname)
-		additem(temp)
-		return PLUGIN_CONTINUE
+		if (report)
+			irc_privmsg(adminname, "You are not logged in as an admin.");
+		return PLUGIN_CONTINUE;
 	}
-	for(new inum=adminnum;inum<MAX_USERS;inum++)
+
+	for (new inum = adminnum; inum < MAX_USERS; inum++)
 	{
 		if(strlen(users[inum+1]) > 0)
 		{
-			copy(users[inum],30,users[inum+1])
-			usersaccess[inum] = usersaccess[inum+1]
-			usersid[inum] = usersid[inum+1]
+			copy(users[inum], 30, users[inum+1]);
+			usersaccess[inum] = usersaccess[inum+1];
+			usersid[inum] = usersid[inum+1];
 		}
 		else
 		{
-			copy(users[inum],30,"")
-			usersaccess[inum] = -1
-			usersid[inum] = -1
-			break
-		}
-	}
-	new retstr[201], fnum, a
-	while(read_file(loginfile,fnum,retstr,200,a) != 0)
-	{
-		new fuser[31], faccess[31], fid[31]
-		parse(retstr,fuser,30,faccess,30,fid,30)
-		if(equali(fuser,adminname))
-		{
-			new writestr[201]
-			format(writestr,200,"")
-			write_file(loginfile,writestr,fnum)
-		}
-		fnum++
-	}
-	if(report)
-	{
-		format(temp,1024,"PRIVMSG %s :You have logged out.^r^n",adminname)
-		additem(temp)
-	}
-	return PLUGIN_CONTINUE
-}
-
-public admin_commands(name[],command[])
-{
-	//Replace with a command lookup and stuff, you know not a list of fucking commands using containi
-	//new uaccess = is_irc_admin(name)
-	return PLUGIN_CONTINUE
-}
-
-public do_command(name[],adminaccess,commandstr[],where)
-{
-	new command[51], parameters[51]
-	strbreak(commandstr,command,50,parameters,50)
-	replace(command,50,"@","")
-	if(equali(command,"amx_rcon"))
-	{
-		if(adminaccess & ADMIN_RCON)
-		{
-			server_cmd("%s",parameters)
-			if(where)
-				format(temp,1024,"NOTICE %s :Command successful!^r^n",name)
-			else
-				format(temp,1024,"PRIVMSG %s :Command successful!^r^n",name)
-		}
-	}
-	new maxconcmds = get_concmdsnum(adminaccess,-1)
-	new rcommand[51],rflags,rinfo[51]
-	for(new inum=0;inum<=maxconcmds;inum++)
-	{
-		get_concmd(inum,rcommand,50,rflags,rinfo,50,adminaccess,-1)
-		if(strlen(rcommand) <= 0) break;
-		if(equali(command,rcommand))
-		{
-			if(where)
-				format(temp,1024,"NOTICE %s :Command successful!^r^n",name)
-			else
-				format(temp,1024,"PRIVMSG %s :Command successful!^r^n",name)
-			additem(temp)
-			server_cmd("%s %s",command,parameters)
+			copy(users[inum], 30, "");
+			usersaccess[inum] = -1;
+			usersid[inum] = -1;
 			break;
 		}
 	}
-	return PLUGIN_HANDLED
+
+	new retstr[256], fnum, a;
+	while (read_file(loginfile, fnum, retstr, sizeof(retstr)-1, a))
+	{
+		new fuser[32], faccess[32], fid[32];
+		parse(retstr, fuser,   sizeof(fuser)   -1,
+		              faccess, sizeof(faccess) -1,
+									fid,     sizeof(fid)     -1);
+
+		if (equali(fuser,adminname))
+			write_file(loginfile, "", fnum)
+
+		fnum++
+	}
+
+	if (report)
+		irc_privmsg(adminname, "You have logged out.");
+
+	return PLUGIN_CONTINUE;
+}
+
+public do_command(name[], adminaccess, commandstr[], msg_type[])
+{
+	new command[64], parameters[64];
+
+	strbreak(commandstr, command,    sizeof(command),
+	                     parameters, sizeof(parameters));
+
+	replace(command, sizeof(command)-1, "@", "");
+
+	if (equali(command,"amx_rcon") && (adminaccess & ADMIN_RCON))
+	{
+		server_cmd("%s", parameters);
+		irc_msg(msg_type, name, "Command successful!");
+	}
+
+	// with adminacccess we specify what commands to get
+	new maxconcmds = get_concmdsnum(adminaccess, -1);
+	new rcommand[64], rinfo[64], rflags;
+
+	for (new i = 0; i <= maxconcmds ; i++)
+	{
+		// last option: 0 server commands, + player commands, - all commands
+		get_concmd(i, rcommand, sizeof(rcommand) -1,
+		              rflags,
+									rinfo,    sizeof(rinfo)    -1,
+									adminaccess,
+									-1);
+
+		if (!strlen(rcommand)) break;
+
+		if (equali(command,rcommand))
+		{
+			irc_msg(msg_type, name, "Command successful!");
+			server_cmd("%s %s", command, parameters);
+			return PLUGIN_HANDLED;
+		}
+	}
+	irc_msg(msg_type, name, "No such command.");
+	return PLUGIN_HANDLED;
 }
