@@ -791,7 +791,7 @@ public irc_dataparse(rdata[])
 		copy(oldname, sizeof(oldname)-1, tempname[1]);
 		trim(oldname);
 		trim(newname);
-		admin_changenick(oldname, newname);
+		on_nick(oldname, newname);
 	}
 	else if(equali(arg2,"QUIT"))
 	{
@@ -801,7 +801,7 @@ public irc_dataparse(rdata[])
 		      arg1,     sizeof(arg1)    -1);
 
 		copy(leavename, sizeof(leavename), tempname[1]);
-		irc_admin_logout(leavename, false);
+		on_quit(leavename);
 	}
 	else if (equali(arg1,"ERROR"))
 	{
@@ -810,6 +810,16 @@ public irc_dataparse(rdata[])
 		set_task(Float:60,"irc_connect")
 	}
 	return 0;
+}
+
+public on_quit(leavename)
+{
+	irc_admin_logout(leavename, false);
+}
+
+public on_nick(oldname[], newname[])
+{
+	admin_changenick(oldname, newname);
 }
 
 public admin_changenick(oldname[], newname[])
