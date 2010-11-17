@@ -197,14 +197,14 @@ irc_is_help_synonym(prefix, string[])
 }
 
 static irc_help_commands_header[][] = {
-	"%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus ",
+	"%s %s :hldsirc - written by Andrius Bentkus",
 	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):",
 	"%s %s :cmds / commands / help / info - Display this help."
 }
 
 static irc_commands[][] = {
-	{ IRC_CMD_PRIVATE, 2, "login" ,   "Log into HLDS<->IRC as an admin.", "username", "password" },
-	{ IRC_CMD_PRIVATE, 0, "logout",   "Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC. " },
+	{ IRC_CMD_PRIVATE, 2, "login" ,   "Log into hldsirc as an admin.", "username", "password" },
+	{ IRC_CMD_PRIVATE, 0, "logout",   "Log out of hldsirc admin. You will automatically be logged out if you quit IRC. " },
 	{ IRC_CMD_BOTH,    0, "players",  "List the users currently on the server." },
 	{ IRC_CMD_BOTH,    0, "map",      "Display the currently played map." },
 	{ IRC_CMD_BOTH,    0, "nextmap",  "Display the next map in the map cycle." },
@@ -497,7 +497,7 @@ public get_server_status()
 
 public plugin_init()
 {
-	register_plugin("HLDS<->IRC","2.7","devicenull")
+	register_plugin("hldsirc","2.7","devicenull")
 
 	register_dictionary("admincmd.txt");
 	register_dictionary("common.txt"  );
@@ -548,7 +548,7 @@ public plugin_init()
 
 public IRC_Init()
 {
-	server_print "HLDS <-> IRC is connecting"
+	server_print "hldsirc is connecting"
 	set_task(1.0,"irc_datacheck",_,_,_,"b")
 	set_task(0.5,"sendnext",_,_,_,"b")
 
@@ -591,7 +591,7 @@ public admin_check()
 {
 	if(!file_exists(loginfile))
 	{
-		write_file(loginfile, "HLDS<->IRC Log file")
+		write_file(loginfile, "hldsirc Log file")
 	}
 	else
 	{
@@ -815,7 +815,7 @@ public irc_dataparse(rdata[])
 	return 0;
 }
 
-public on_quit(leavename)
+public on_quit(leavename[])
 {
 	irc_admin_logout(leavename, false);
 }
