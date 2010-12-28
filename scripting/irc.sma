@@ -1022,7 +1022,7 @@ public cmd_say_team(id)
 }
 
 static irc_team_colors[][] = { { "00" }, { "04" }, { "12" }, { "00" } };
-static irc_team_strings[][] = { { "Spectator" }, { "Terrorist "}, { "Counter-Terrorist" }, { "Spectator" } };
+static irc_team_strings[][] = { { "Spectator" }, { "Terrorist"}, { "Counter-Terrorist" }, { "Spectator" } };
 
 cmd_say_base(id, pub)
 {
