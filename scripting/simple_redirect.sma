@@ -3,41 +3,88 @@
 * Simple Redirection Plugin for AMXX
 * Orginal Code by Sonic (sonic@codet.de)
 * Modified and Made for AMXX by BigBaller
+* Modified by Andrius Bentkus
 *
 *  Place following cvars in server.cfg
 *
-*  amx_rd_maxplayers <x>             // - begin redirection when more the x ppl connected ( 0 = redirect all players )
-*  amx_rd_server <ip>                // - redirect to this server
-*  amx_rd_serverport <port>          // - redirect server port
-*  amx_rd_serverpw <password>        // - password for the amx_rd_server (if needed)
+*  amx_rd_maxplayers <x>                 // begin redirection when more the x ppl connected ( 0 = redirect all players )
+*  amx_rd_server <ip:port>;<ip:port>;... // redirect to this server
 *
-*
-*  To Disable this plugin set amx_rd_maxppl to 33 or remove from plugins.ini
+*  To Disable this plugin remove from plugins.ini
 */
 
 #include <amxmodx>
 
-public plugin_init() {
-	register_plugin("Simple Redirect","1.0", "BigBaller");
-	register_cvar("amx_rd_maxplayers", "0");
+new current_server = 0;
+new server_count;
 
-	register_cvar("amx_rd_server", "");
-	register_cvar("amx_rd_serverport", "");
-	register_cvar("amx_rd_serverpw", "");
+public plugin_init() {
+	register_plugin("Simple Redirect", "1.0", "Andrius Bentkus");
+	register_cvar("amx_srd_maxplayers", "0");
+	register_cvar("amx_srd_server", "");
+
+	server_count = count_servers();
+
+	register_srvcmd("amx_srd_test", "amx_srd_test", 0, "test the next server");
 }
 
-public client_connect(id){
-	new rd_maxplayers = get_cvar_num("amx_rd_maxplayers");
-	new rd_serverport = get_cvar_num("amx_rd_serverport");
-	new rd_server[64], rd_serverpw[32];
+public client_connect(id) {
 
-	get_cvar_string("amx_rd_server", rd_server, 63);
-	get_cvar_string("amx_rd_serverpw", rd_serverpw, 31)
+	new srd_maxplayers = get_cvar_num("amx_srd_maxplayers");
 
-	if ( get_playersnum() >= rd_maxplayers) {
-		if ( !equal(rd_serverpw,"") )
-			client_cmd(id,"echo ^"[AMXX] Simple Redirection - Set Password to %s^";password %s",rd_serverpw,rd_serverpw)
-		client_cmd(id,"echo ^"[AMXX] Simple Redirection -  Redirecting to %s:%d^";connect %s:%d",rd_server,rd_serverport,rd_server,rd_serverport)
+	if (get_playersnum() >= srd_maxplayers) {
+		new server[128];
+		copy(server, sizeof(server) - 1, get_next_server());
+		client_cmd(id,"echo ^"[AMXX] Simple Redirection -  Redirecting to %s^";connect %s", server, server);
 	}
+
 	return PLUGIN_CONTINUE
+}
+
+get_next_server()
+{
+	new srd_server[512];
+	new sz_buffer[512];
+	new sz_server[128];
+
+	get_cvar_string("amx_srd_server", srd_server, 511);
+
+	for (new i = 0; i < server_count; i++) {
+		strtok(srd_server, sz_server, sizeof(srd_server) - 1, sz_buffer, sizeof(sz_buffer) - 1, ';');
+		copy(srd_server, sizeof(srd_server), sz_buffer);
+
+		if (current_server == i) {
+			break;
+		}
+	}
+
+	current_server = (current_server + 1) % server_count;
+
+	return sz_server;
+}
+
+public amx_srd_test() {
+	server_print("%s (%d of %d)", get_next_server(), current_server + 1, server_count);
+}
+
+count_servers() {
+	new srd_server[512];
+	new sz_buffer[512];
+	new sz_server[128];
+
+	new i = 0;
+
+	get_cvar_string("amx_srd_server", srd_server, 511);
+
+	while (true) {
+		if (!strlen(srd_server)) {
+			break;
+		}
+
+		strtok(srd_server, sz_server, sizeof(srd_server) - 1, sz_buffer, sizeof(sz_buffer) - 1, ';');
+		copy(srd_server, sizeof(srd_server), sz_buffer);
+		i++;
+	}
+
+	return i;
 }
