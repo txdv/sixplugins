@@ -142,7 +142,7 @@ public admin_heal(id, level, cid) {
 		set_user_health(player, str_to_num(arg2) + user_health)
 		new name[32]
 		get_user_name(player, name, 31)
-		switch(get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_HEAL_PLAYER_CASE2", name2, name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_HEAL_PLAYER_CASE1", name)
 		}
@@ -205,10 +205,10 @@ public admin_godmode(id, level, cid) {
 			console_print(id, "%L", LANG_PLAYER, "AINO_NO_CLIENTS")
 			return PLUGIN_HANDLED
 		}
-		for(new a = 0; a < inum; ++a) {
+		for (new a = 0; a < inum; ++a) {
 			set_user_godmode(players[a], str_to_num(arg2))
 		}
-		switch(get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GODMODE_TEAM_CASE2", name2, arg[1])
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GODMODE_TEAM_CASE1", arg[1])
 		}
@@ -249,7 +249,7 @@ public admin_noclip(id, level, cid) {
 			console_print(id, "%L", LANG_PLAYER, "AINO_NO_CLIENTS")
 			return PLUGIN_HANDLED
 		}
-		for(new a = 0; a < inum; ++a) {
+		for (new a = 0; a < inum; ++a) {
 			set_user_noclip(players[a], str_to_num(arg2))
 		}
 		switch (get_cvar_num("amx_show_activity")) {
@@ -752,7 +752,7 @@ public admin_alltalk(id, level) {
 	server_cmd("sv_alltalk %s", alltalk)
 	new name[32]
 	get_user_name(id, name, 31)
-	switch(get_cvar_num("amx_show_activity")) {
+	switch (get_cvar_num("amx_show_activity")) {
 		case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_ALLTALK_SET_CASE2", name, alltalk)
 		case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_ALLTALK_SET_CASE1", alltalk)
 	}
@@ -866,7 +866,7 @@ public admin_gravity(id, level) {
 	server_cmd("sv_gravity %s", gravity)
 	new name[32]
 	get_user_name(id, name, 31)
-	switch(get_cvar_num("amx_show_activity")) {
+	switch (get_cvar_num("amx_show_activity")) {
 		case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN %s: set gravity to %s", name, gravity)
 		case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN: set gravity to %s", gravity)
 	}
@@ -923,7 +923,7 @@ public admin_glow(id, level, cid) {
 			ired, igreen, iblue, kRenderTransAlpha, ialpha)
 		new name[32]
 		get_user_name(player,name,31)
-		switch(get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN %s: set glowing on %s",name2,name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN: set glowing on %s",name)
 		}
