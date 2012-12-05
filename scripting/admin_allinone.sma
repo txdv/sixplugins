@@ -17,7 +17,7 @@
 *          Also fixed amx_armor to allow admins to give themselfs armor! Thanks to GIR on AMXX Forums for pointing this out!
 *  v1.5 -- Added #define USING_STEAM in the header. WON users only have to comment this line instead of searching the plugin.
 *          Reorganized plugin, moved plugin_init() to the top of the plugin and moved around the body.
-*          Added information, based on amx_show_activity cvar, gravity and rocket will now display admin actions.
+*          Added information, based on amx_allinone_show_activity cvar, gravity and rocket will now display admin actions.
 *          Added a gag plugin per request, very simple and based off tcquest78's code.
 *          Removed the description and examples of the commands from the plugin, uses a URL for information instead.
 *  v1.5.1  Bug fix, due to reorganization amx_fire command didnt work, that has been fixed.
@@ -103,6 +103,7 @@ public plugin_init()
 	register_clcmd("say_team /gravity", "check_gravity")
 
 	register_cvar("amx_moneymsg", "1")
+	register_cvar("amx_allinone_show_activity", "0")
 }
 
 
@@ -127,7 +128,7 @@ public admin_heal(id, level, cid) {
 			new user_health = get_user_health(players[a])
 			set_user_health(players[a], str_to_num(arg2) + user_health)
 		}
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_HEAL_TEAM_CASE2", name2, arg[1])
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_HEAL_TEAM_CASE1", arg[1])
 		}
@@ -142,7 +143,7 @@ public admin_heal(id, level, cid) {
 		set_user_health(player, str_to_num(arg2) + user_health)
 		new name[32]
 		get_user_name(player, name, 31)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_HEAL_PLAYER_CASE2", name2, name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_HEAL_PLAYER_CASE1", name)
 		}
@@ -208,7 +209,7 @@ public admin_godmode(id, level, cid) {
 		for (new a = 0; a < inum; ++a) {
 			set_user_godmode(players[a], str_to_num(arg2))
 		}
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GODMODE_TEAM_CASE2", name2, arg[1])
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GODMODE_TEAM_CASE1", arg[1])
 		}
@@ -222,7 +223,7 @@ public admin_godmode(id, level, cid) {
 		set_user_godmode(player, str_to_num(arg2))
 		new name[32]
 		get_user_name(player, name, 31)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GODMODE_PLAYER_CASE2", name2, name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GODMODE_PLAYER_CASE1", name)
 		}
@@ -252,7 +253,7 @@ public admin_noclip(id, level, cid) {
 		for (new a = 0; a < inum; ++a) {
 			set_user_noclip(players[a], str_to_num(arg2))
 		}
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_NOCLIP_TEAM_CASE2", name2, arg[1])
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_NOCLIP_TEAM_CASE1", arg[1])
 		}
@@ -266,7 +267,7 @@ public admin_noclip(id, level, cid) {
 		set_user_noclip(player, str_to_num(arg2))
 		new name[32]
 		get_user_name(player, name, 31)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_NOCLIP_PLAYER_CASE2", name2, name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_NOCLIP_PLAYER_CASE1", name)
 		}
@@ -304,7 +305,7 @@ public admin_teleport(id, level, cid) {
 	set_user_origin(player, origin)
 	new name[32]
 	get_user_name(player, name, 31)
-	switch (get_cvar_num("amx_show_activity")) {
+	switch (get_cvar_num("amx_allinone_show_activity")) {
 		case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_TELE_PLAYER_CASE2", name2, name)
 		case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_TELE_PLAYER_CASE1", name)
 	}
@@ -363,7 +364,7 @@ public admin_stack(id, level, cid) {
 	}
 
 	get_user_name(player,name,32)
-	switch (get_cvar_num("amx_show_activity")) {
+	switch (get_cvar_num("amx_allinone_show_activity")) {
 		case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_STACK_PLAYER_CASE2", name2, name)
 		case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_STACK_PLAYER_CASE1", name)
 	}
@@ -752,7 +753,7 @@ public admin_alltalk(id, level) {
 	server_cmd("sv_alltalk %s", alltalk)
 	new name[32]
 	get_user_name(id, name, 31)
-	switch (get_cvar_num("amx_show_activity")) {
+	switch (get_cvar_num("amx_allinone_show_activity")) {
 		case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_ALLTALK_SET_CASE2", name, alltalk)
 		case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_ALLTALK_SET_CASE1", alltalk)
 	}
@@ -866,7 +867,7 @@ public admin_gravity(id, level) {
 	server_cmd("sv_gravity %s", gravity)
 	new name[32]
 	get_user_name(id, name, 31)
-	switch (get_cvar_num("amx_show_activity")) {
+	switch (get_cvar_num("amx_allinone_show_activity")) {
 		case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN %s: set gravity to %s", name, gravity)
 		case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN: set gravity to %s", gravity)
 	}
@@ -909,7 +910,7 @@ public admin_glow(id, level, cid) {
 		for (new a = 0; a < inum; ++a)
 			set_user_rendering(players[a], kRenderFxGlowShell,
 				ired, igreen, iblue, kRenderTransAlpha, ialpha)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GLOW_TEAM_CASE2", name2, arg[1])
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_GLOW_TEAM_CASE1", arg[1])
 		}
@@ -923,7 +924,7 @@ public admin_glow(id, level, cid) {
 			ired, igreen, iblue, kRenderTransAlpha, ialpha)
 		new name[32]
 		get_user_name(player,name,31)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN %s: set glowing on %s",name2,name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "[AMXX] ADMIN: set glowing on %s",name)
 		}
@@ -974,7 +975,7 @@ public admin_bury(id, level, cid) {
 			}
 			bury_player(id, players[a])
 		}
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_BURY_TEAM_CASE2", admin_name, arg[1])
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_BURY_TEAM_CASE1", arg[1])
 		}
@@ -986,7 +987,7 @@ public admin_bury(id, level, cid) {
 			return PLUGIN_HANDLED
 		bury_player(id, player)
 		get_user_name(player, player_name, 31)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_BURY_PLAYER_CASE2", admin_name, player_name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_BURY_PLAYER_CASE1", player_name)
 		}
@@ -1025,7 +1026,7 @@ public admin_unbury(id,level,cid) {
 			}
 			unbury_player(id, players[a])
 		}
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_UNBURY_TEAM_CASE2", name2, arg[1])
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_UNBURY_TEAM_CASE1", arg[1])
 		}
@@ -1037,7 +1038,7 @@ public admin_unbury(id,level,cid) {
 			return PLUGIN_HANDLED
 		unbury_player(id, player)
 		get_user_name(player, player_name, 31)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_UNBURY_PLAYER_CASE2", name2, player_name)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_UNBURY_PLAYER_CASE1", player_name)
 		}
@@ -1431,7 +1432,7 @@ public fire_player(id, level, cid) {
 
 	new adminname[32]
 	get_user_name(id, adminname, 31)
-	switch (get_cvar_num("amx_show_activity")) {
+	switch (get_cvar_num("amx_allinone_show_activity")) {
 		case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_FIRE_PLAYER_CASE2", adminname, name)
 		case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_FIRE_PLAYER_CASE1", name)
 	}
@@ -1616,7 +1617,7 @@ public rocket_player(id, level, cid) {
 		get_user_name(player, playername, 31)
 		new name[32]
 		get_user_name(id,name,31)
-		switch (get_cvar_num("amx_show_activity")) {
+		switch (get_cvar_num("amx_allinone_show_activity")) {
 			case 2: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_ROCKET_PLAYER_CASE2", name, playername)
 			case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "AINO_ROCKET_PLAYER_CASE1", playername)
 		}
