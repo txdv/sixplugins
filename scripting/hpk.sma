@@ -13,14 +13,16 @@ new g_player_count[MAX_PLAYERS];
 new gcv_hpk_ping;
 new gcv_hpk_time;
 new gcv_hpk_min;
+new gcv_hpk_night;
 
 public plugin_init()
 {
 	register_plugin("High Ping Kicker", "0.1", "Andrius Bentkus");
 
-	gcv_hpk_ping = register_cvar("hpk_ping",  "150");
-	gcv_hpk_time = register_cvar("hpk_time", "10.0");
-	gcv_hpk_min  = register_cvar("hpk_min" ,    "5");
+	gcv_hpk_ping  = register_cvar("hpk_ping",   "250");
+	gcv_hpk_time  = register_cvar("hpk_time",  "10.0");
+	gcv_hpk_min   = register_cvar("hpk_min",      "5");
+	gcv_hpk_night = register_cvar("hpk_night", "0_10");
 
 	register_concmd("hpk_pings", "hpk_pings", ADMIN_ADMIN, "lists the average ping rate of all players");
 }
@@ -50,7 +52,7 @@ public ping_check(param[])
 	new flags = get_user_flags(id);
 
 	if ((flags & ADMIN_IMMUNITY) ||
-	    (flags & ADMIN_ADMIN)    ||
+			(flags & ADMIN_ADMIN)    ||
 			(flags & ADMIN_RESERVATION))
 		{
 
@@ -72,14 +74,18 @@ public ping_check(param[])
 		g_player_pings[id][MAX_PINGS - 1] = ping;
 	}
 
-	if (get_pcvar_num(gcv_hpk_min) >= g_player_count[id])
+	if (get_pcvar_num(gcv_hpk_min) >= g_player_count[id]) {
 		return;
+	}
+
+	if (night_time()) {
+		return;
+	}
 
 	new average = average_ping(id);
-
-	if (average > get_pcvar_num(gcv_hpk_ping))
+	if (average > get_pcvar_num(gcv_hpk_ping)) {
 		kick_player(id);
-
+	}
 }
 
 average_ping(id)
@@ -87,8 +93,9 @@ average_ping(id)
 	new sum = 0;
 	new count = g_player_count[id];
 
-	if (!count)
+	if (!count) {
 		return 0;
+	}
 
 	for (new i = 0; i < count; i++) {
 		sum += g_player_pings[id][i];
@@ -104,6 +111,46 @@ kick_player(id)
 	new uid = get_user_userid(id);
 	server_cmd("kick #%d \"high ping\"", uid);
 	client_print(0, print_chat, "[HPK] %s was disconnected due to high ping!", name);
+}
+
+
+parse_int(src[], start, end)
+{
+	new val = 0;
+	for (new i = start; i < end; i++) {
+		val *= 10;
+		val += src[i] - '0';
+	}
+	return val;
+}
+
+hours()
+{
+	new hour[3];
+	get_time("%H", hour, 2);
+	return str_to_num(hour);
+}
+
+find(src[], start, end, ch)
+{
+	for (new i = start; i < end; i++) {
+		if (src[i] == ch) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+night_time()
+{
+	new tmp[32];
+	get_pcvar_string(gcv_hpk_night, tmp, sizeof(tmp) - 1);
+	new length = strlen(tmp);
+	new dem = find(tmp, 0, length, '_');
+	new start = parse_int(tmp, 0, dem);
+	new end = parse_int(tmp, dem + 1, length);
+	new now = hours();
+	return (now >= start) && (now <= end);
 }
 
 public hpk_pings(id)
@@ -124,6 +171,7 @@ public hpk_pings(id)
 		console_print(id, "%2d  %-16.15s %-20s #%-7d %-6d %-6d", pid, name, authid,
 		              get_user_userid(pid), g_player_count[pid], average_ping(pid));
 	}
+	return PLUGIN_HANDLED;
 }
 
 get_free_task_id()
