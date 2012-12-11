@@ -31,7 +31,7 @@ Version 2.0
 
 #define max(%1,%2) (%1 > %2 ? %1 : %2)
 
-#define IRC_CMD_PUBLIC  (1<<0)
+#define IRC_CMD_PUBLIC  (1<<1)
 #define IRC_CMD_PRIVATE (1<<1)
 #define IRC_CMD_BOTH    (IRC_CMD_PUBLIC | IRC_CMD_PRIVATE)
 
@@ -120,13 +120,13 @@ irc_print_array(array[][], size, ...)
 
 static irc_help_command_synonyms[][] = { "cmds", "info", "commands", "help" };
 
-irc_is_help_synonym(prefix, string[])
+irc_is_help_synonym(prefix[], string[])
 {
 	for (new i = 0; i < sizeof(irc_help_command_synonyms); i++)
 	{
-		if ((prefix == 0) && equali(string, irc_help_command_synonyms[i])) return true;
+		if ((prefix[0] == 0) && equali(string, irc_help_command_synonyms[i])) return true;
 		if ((strlen(string) > 0) &&
-		    (prefix == string[0]) &&
+			 (prefix[0] == string[0]) &&
 				stringcmp(string, 1, irc_help_command_synonyms[i])) return true;
 	}
 	return false;
@@ -134,28 +134,28 @@ irc_is_help_synonym(prefix, string[])
 
 static irc_help_commands_header[][] =
 {
-	"%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus ^r^n",
-	"%s %s :Available commands (to use commands in channel add ! to the front of the command, otherwise private message commands to the bot):^r^n",
-	"%s %s :cmds / commands / help / info - Display this help.^r^n"
+	"%s %s :Available commands (to use commands in channel add @ to the front of the command, otherwise private message commands to the bot):^r^n",
+	"%s %s :cmds/commands/help/info - Display this help.^r^n"
 }
 
 static irc_commands[][] = {
-	{ IRC_CMD_PRIVATE, 2, "login" ,   "Log into HLDS<->IRC as an admin.", "username", "password" },
-	{ IRC_CMD_PRIVATE, 0, "logout",   "Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC. " },
-	{ IRC_CMD_BOTH,    0, "players",  "List the users currently on the server." },
-	{ IRC_CMD_BOTH,    0, "map",      "Display the currently played map." },
-	{ IRC_CMD_BOTH,    0, "nextmap",  "Display the next map in the map cycle." },
-	{ IRC_CMD_BOTH,    0, "timeleft", "Display the amount of time left on the current map." },
-	{ IRC_CMD_BOTH,    0, "ip",       "Display the IP of the server." },
-	{ IRC_CMD_BOTH,    0, "status",   "Display the status of the server." }
+	{ IRC_CMD_PRIVATE, 2, "login" ,	"Log into HLDS<->IRC as an admin.", "username", "password" },
+	{ IRC_CMD_PRIVATE, 0, "logout",	"Log out of HLDS<->IRC admin. You will automatically be logged out if you quit IRC." },
+	{ IRC_CMD_BOTH,	 0, "players",	"List the users currently on the server." },
+	{ IRC_CMD_BOTH,	 0, "map",		"Display the currently played map." },
+	{ IRC_CMD_BOTH,	 0, "nextmap",	"Display the next map in the map cycle." },
+	{ IRC_CMD_BOTH,	 0, "timeleft","Display the amount of time left on the current map." },
+	{ IRC_CMD_BOTH,	 0, "ip",		"Display the IP of the server." },
+	{ IRC_CMD_BOTH,	 0, "status",	"Display the status of the server." },
+	{ IRC_CMD_BOTH,	 0, "about",	"Display info about the bot." }
 };
 
-public irc_command_fits(command[], prefix)
+public irc_command_fits(command[], prefix[])
 {
 	for (new i = 0; i < sizeof(irc_commands); i++)
 	{
-		if ((prefix == 0 && (irc_commands[i][0] & IRC_CMD_PRIVATE) &&    equali(irc_commands[i][2],    command   )) ||
-		    (prefix != 0 && (irc_commands[i][0] & IRC_CMD_PUBLIC ) && stringcmp(irc_commands[i][2], 0, command, 1))) return i;
+		if ((prefix[0] == 0 && (irc_commands[i][0] & IRC_CMD_PRIVATE) &&    equali(irc_commands[i][2],    command   )) ||
+			 (prefix[0] != 0 && (irc_commands[i][0] & IRC_CMD_PUBLIC ) && stringcmp(irc_commands[i][2], 0, command, 1))) return i;
 	}
 	return -1;
 }
@@ -169,25 +169,24 @@ static irc_help_commands[][] =
 	"%s %s :%snextmap - Display the next map in the map cycle.^r^n",
 	"%s %s :%stimeleft - Display the amount of time left on the current map.^r^n",
 	"%s %s :%sip - Display the IP of the server.^r^n",
-	"%s %s :%sstatus - Display the status of the server.^r^n"
+	"%s %s :%sstatus - Display the status of the server.^r^n",
+	"%s %s :%sabout - Display info about the bot.^r^n"
 }
 
 static irc_help_commands_trailer[][] = {
 	"%s %s :Additional commands are available while PMing the bot.  PM the bot with cmds to view them.^r^n"
 }
 
-
 public irc_cmd_p(message_type[], target[])
 {
 	for (new i = 0; i < sizeof(irc_commands); i++)
 	{
-		irc_print("%s %s :%s%s - %s", message_type, target, "@", irc_commands[i][2], irc_commands[i][3]);
+		irc_print("%s %s :%s - %s", message_type, target, irc_commands[i][2], irc_commands[i][3]);
 	}
 }
 
-public irc_cmd_list(message_type[], target[], prefix)
+public irc_cmd_list(message_type[], target[], prefix[])
 {
-
 	irc_print_array(irc_help_commands_header,  sizeof(irc_help_commands_header),  message_type, target        );
 	irc_print_array(irc_help_commands       ,  sizeof(irc_help_commands),         message_type, target, prefix);
 	if (equali(message_type, IRC_MSG_PRIVMSG))
@@ -216,7 +215,7 @@ public irc_cmd_players(message_type[], target[])
 		get_user_authid (i, authid, 34);
 		get_user_name   (i, uname,  31);
 		get_user_ip     (i, ip,     50);
-		get_user_ping   (i, ping,   loss);
+		get_user_ping   (i, ping, loss);
 
 		authid_max = max(authid_max, strlen(authid));
 		uname_max  = max(uname_max,  strlen(uname ));
@@ -231,16 +230,16 @@ public irc_cmd_players(message_type[], target[])
 		if (!is_user_connected(i)) continue;
 
 		get_user_authid (i, authid, 34);
-		get_user_name   (i, uname,  31);
-		get_user_ip     (i, ip,     50);
-		get_user_ping   (i, ping,   loss);
+		get_user_name (i, uname,  31);
+		get_user_ip   (i, ip,     50);
+		get_user_ping (i, ping, loss);
 
 		irc_print("%s %s :#%d %s%s %s%s %s%s %s%d %s%d^r^n", message_type, target, i,
 					 authid, fill(' ', authid_max - strlen(authid)),
-					 fill(' ', uname_max  - strlen(uname)),  uname,
-					 fill(' ', ip_max     - strlen(ip)),     ip,
-					 fill(' ', ping_max   - inttostrlen(ping)), ping,
-					 fill(' ', loss_max   - inttostrlen(loss)),  loss);
+					 fill(' ', uname_max - strlen(uname)),     uname,
+					 fill(' ', ip_max    - strlen(ip)),        ip,
+					 fill(' ', ping_max  - inttostrlen(ping)), ping,
+					 fill(' ', loss_max  - inttostrlen(loss)), loss);
 	}
 
 	irc_print("%s %s :End Players List^r^n", message_type, target)
@@ -377,12 +376,22 @@ public irc_cmd_status(message_type[], target[])
 	}
 }
 
+public irc_cmd_about(message_type[], target[])
+{
+	irc_print("%s %s :IRC<->HLDS - Written by Devicenull, updated by maintained by twistedeuphoria, {NM}JRBLOODMIST, ToXedVirus^r^n");
+}
+
 irc_handle_commands(name[], command[], priv)
 {
-	new prefix = (priv ? 0 : '@');
+	new prefix[] = "@";
+
+	if (priv)
+	{
+		prefix[0] = 0;
+	}
 
 	// quick check if it fits
-	if ((prefix != 0) && (strlen(command) > 0) && command[0] != prefix) return;
+	if ((strlen(prefix) > 0) && (strlen(command) > 0) && command[0] != prefix[0]) return;
 
 	new message_type[8];
 	strcpy(message_type, (priv ? IRC_MSG_PRIVMSG : IRC_MSG_NOTICE));
@@ -401,7 +410,7 @@ irc_handle_commands(name[], command[], priv)
 		callfunc_push_str(message_type);
 		callfunc_push_str(name);
 		callfunc_push_str(command);
-		callfunc_push_int(prefix);
+		callfunc_push_str(prefix);
 		callfunc_end();
 	} else irc_method_missing(name, command, priv);
 }
@@ -444,9 +453,9 @@ public plugin_init()
 
 
 	//Various Messages
-	register_cvar("irc_msg_srvjoin"," $name ($steamid) has joined the server")
-	register_cvar("irc_msg_srvpart"," $name ($steamid) has left the server")
-	register_cvar("irc_msg_startup"," $servername  - $ip Current Map: $map $curplayers / $maxplayers players")
+	register_cvar("irc_msg_srvjoin","$name ($steamid) has joined the server")
+	register_cvar("irc_msg_srvpart","$name ($steamid) has left the server")
+	register_cvar("irc_msg_startup","$servername - $ip | Current Map: $map | Players: $curplayers/$maxplayers")
 
 	register_cvar("irc_msg_usecolors","1")
 
@@ -937,10 +946,9 @@ public irc_saytext(id)
 		if(containi(msg,"/admin") != -1)
 		{
 			replace(msg,1024,"/admin","")
-			format(temp,1024,"PRIVMSG %s :Admin request by %s. %s^r^n",chan,name,msg)
-			server_print("TEMP: %s CHAN: %s",temp,chan)
+			format(temp,1024,"PRIVMSG %s :4Admin request by %s. %s^r^n",chan,name,msg)
 			additem(temp)
-			client_print(id,print_chat,"Your admin request was sent to the channel.")
+			client_print(id,print_chat,"Your admin request was sent.")
 			return PLUGIN_HANDLED
 		}
 		else if(!get_cvar_num("irc_from_hlds_say_auto"))
@@ -961,9 +969,9 @@ public irc_saytext(id)
 			new team = get_user_team(id)
 			switch(team)
 			{
-				case 1: len += format(finalmessage[len],300-len,"4 %s",name)
-					case 2: len += format(finalmessage[len],300-len,"12 %s",name)
-					default: len += format(finalmessage[len],300-len,"0 %s",name)
+				case 1: len += format(finalmessage[len],300-len,"4%s",name)
+					case 2: len += format(finalmessage[len],300-len,"12%s",name)
+					default: len += format(finalmessage[len],300-len,"0%s",name)
 			}
 		}
 		else
@@ -988,8 +996,7 @@ public irc_sayteamtext(id)
 		if(containi(msg,"/admin") != -1)
 		{
 			replace(msg,1024,"/admin","")
-			format(temp,1024,"PRIVMSG %s :Admin request by %s. %s^r^n",chan,name,msg)
-			server_print("TEMP: %s CHAN: %s",temp,chan)
+			format(temp,1024,"PRIVMSG %s :4Admin request by %s. %s^r^n",chan,name,msg)
 			additem(temp)
 			client_print(id,print_chat,"Your admin request was sent to the channel.")
 			return PLUGIN_HANDLED
@@ -1024,9 +1031,9 @@ public irc_sayteamtext(id)
 			team = get_user_team(id)
 			switch(team)
 			{
-				case 1: len += format(finalmessage[len],300-len,"4 %s",name)
-					case 2: len += format(finalmessage[len],300-len,"12 %s",name)
-					default: len += format(finalmessage[len],300-len,"0 %s",name)
+				case 1: len += format(finalmessage[len],300-len,"4%s",name)
+					case 2: len += format(finalmessage[len],300-len,"12%s",name)
+					default: len += format(finalmessage[len],300-len,"0%s",name)
 			}
 		}
 		else
