@@ -164,22 +164,6 @@ public plugin_init()
 	register_concmd("amx_removefake","botremove",ADMIN_BAN,"<# | @ALL> - remove this many bots")
 	set_task(10.0,"ServerStatus",0,_,_,"b")
 	ReadNames()
-
-	//Setup jtp10181 CVAR
-	new cvarString[256], shortName[16]
-	copy(shortName,15,"ff")
-
-	register_cvar("jtp10181","",FCVAR_SERVER|FCVAR_SPONLY)
-	get_cvar_string("jtp10181",cvarString,255)
-
-	if (strlen(cvarString) == 0) {
-		formatex(cvarString,255,shortName)
-		set_cvar_string("jtp10181",cvarString)
-	}
-	else if (contain(cvarString,shortName) == -1) {
-		format(cvarString,255,"%s,%s",cvarString, shortName)
-		set_cvar_string("jtp10181",cvarString)
-	}
 }
 
 public plugin_natives()
